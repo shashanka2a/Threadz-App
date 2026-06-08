@@ -82,7 +82,7 @@ const inventorySeed: InventorySeed[] = [
   },
   {
     id: "10",
-    quality: "OVERSIZED 100% cotton Heavy Jersey 220 GSM",
+    quality: "100% cotton Heavy Jersey 220 GSM",
     color: "Steel Grey",
     sizes: { S: 6, M: 6, L: 6, XL: 6 },
     quantity: 24,
@@ -90,7 +90,7 @@ const inventorySeed: InventorySeed[] = [
   },
   {
     id: "11",
-    quality: "OVERSIZED 100% cotton Heavy Jersey 220 GSM",
+    quality: "100% cotton Heavy Jersey 220 GSM",
     color: "Wild Ginger",
     sizes: { S: 5, M: 6, L: 6, XL: 6 },
     quantity: 23,
@@ -98,7 +98,7 @@ const inventorySeed: InventorySeed[] = [
   },
   {
     id: "12",
-    quality: "OVERSIZED 100% cotton Heavy Jersey 220 GSM",
+    quality: "100% cotton Heavy Jersey 220 GSM",
     color: "Moss Green",
     sizes: { S: 6, M: 6, L: 6, XL: 6 },
     quantity: 24,
@@ -106,7 +106,7 @@ const inventorySeed: InventorySeed[] = [
   },
   {
     id: "13",
-    quality: "OVERSIZED 100% cotton Heavy Jersey 220 GSM",
+    quality: "100% cotton Heavy Jersey 220 GSM",
     color: "Park Petrol",
     sizes: { S: 6, M: 6, L: 6, XL: 6 },
     quantity: 24,

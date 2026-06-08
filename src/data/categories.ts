@@ -18,7 +18,7 @@ export const QUALITY_OPTIONS = [
   "100% cotton 180 GSM",
   "100% cotton 200 GSM",
   "100% cotton Interlock 220 GSM",
-  "OVERSIZED 100% cotton Heavy Jersey 220 GSM",
+  "100% cotton Heavy Jersey 220 GSM",
 ] as const;
 
 export const CATEGORY_DESCRIPTIONS: Record<ProductCategory, string> = {
@@ -31,9 +31,13 @@ export function isOversizedCategory(category: string): boolean {
 }
 
 export function getCategoryFromQuality(quality: string): ProductCategory {
-  return quality.toUpperCase().includes("OVERSIZED")
-    ? PRODUCT_CATEGORIES.OVERSIZED
-    : PRODUCT_CATEGORIES.PLAIN;
+  if (
+    quality.toUpperCase().includes("OVERSIZED") ||
+    /heavy\s*jersey/i.test(quality)
+  ) {
+    return PRODUCT_CATEGORIES.OVERSIZED;
+  }
+  return PRODUCT_CATEGORIES.PLAIN;
 }
 
 export const RETAIL_PRICE_STANDARD = 499;
@@ -41,7 +45,7 @@ export const RETAIL_PRICE_PREMIUM = 599;
 
 /** Standard 180 GSM plain tees sell at ₹499; premium fabrics at ₹599. */
 export function getRetailPrice(quality: string): number {
-  if (/180\s*GSM/i.test(quality) && !/OVERSIZED/i.test(quality)) {
+  if (/180\s*GSM/i.test(quality) && !/heavy\s*jersey/i.test(quality)) {
     return RETAIL_PRICE_STANDARD;
   }
   return RETAIL_PRICE_PREMIUM;

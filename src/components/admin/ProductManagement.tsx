@@ -561,57 +561,78 @@ export function ProductManagement({
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-200 rounded-none">
+      <Card className="border-neutral-200 rounded-none overflow-hidden">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Quality</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">MRP</TableHead>
-                  <TableHead className="text-center">Stock</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.color}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="rounded-none text-xs">
-                        {product.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] text-xs text-neutral-600">
-                      {product.quality}
-                    </TableCell>
-                    <TableCell className="text-right">₹{product.price}</TableCell>
-                    <TableCell className="text-right text-neutral-500">₹{product.mrp}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={product.quantity < 25 ? "destructive" : "default"}
-                        className="rounded-none"
-                      >
-                        {product.quantity}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
+          <Table className="min-w-[1040px] table-fixed">
+            <colgroup>
+              <col className="w-[56px]" />
+              <col className="w-[16%]" />
+              <col className="w-[9%]" />
+              <col className="w-[12%]" />
+              <col className="w-[22%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8%]" />
+              <col className="w-[7%]" />
+              <col className="w-[10%]" />
+            </colgroup>
+            <TableHeader>
+              <TableRow className="bg-amber-50 hover:bg-amber-50">
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Color</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Quality</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">MRP</TableHead>
+                <TableHead className="text-center">Stock</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id} className="align-top">
+                  <TableCell className="whitespace-normal">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium whitespace-normal break-words leading-snug">
+                    {product.name}
+                  </TableCell>
+                  <TableCell className="whitespace-normal">{product.color}</TableCell>
+                  <TableCell className="whitespace-normal">
+                    <Badge
+                      variant="outline"
+                      className="rounded-none text-[10px] whitespace-normal leading-tight"
+                    >
+                      {product.category}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-normal break-words text-xs leading-snug text-neutral-600">
+                    {product.quality}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">₹{product.price}</TableCell>
+                  <TableCell className="text-right tabular-nums text-neutral-500">
+                    ₹{product.mrp}
+                  </TableCell>
+                  <TableCell className="text-center whitespace-normal">
+                    <Badge
+                      variant={product.quantity < 25 ? "outline" : "default"}
+                      className={`rounded-none ${
+                        product.quantity < 25
+                          ? "bg-yellow-400 text-black border-yellow-400 hover:bg-yellow-400"
+                          : ""
+                      }`}
+                    >
+                      {product.quantity}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <div className="flex items-center justify-center gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -634,7 +655,6 @@ export function ProductManagement({
                 ))}
               </TableBody>
             </Table>
-          </div>
         </CardContent>
       </Card>
 

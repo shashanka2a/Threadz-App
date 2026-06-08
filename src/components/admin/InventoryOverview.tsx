@@ -78,8 +78,8 @@ export function InventoryOverview({ products, stats }: InventoryOverviewProps) {
                 <p className="text-sm text-neutral-600 mb-1">Low Stock SKUs</p>
                 <p className="text-3xl">{lowStockCount}</p>
               </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-yellow-700" />
               </div>
             </div>
           </CardContent>
@@ -120,7 +120,7 @@ export function InventoryOverview({ products, stats }: InventoryOverviewProps) {
         <Card className="border-neutral-200 rounded-none">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <AlertTriangle className="h-5 w-5 text-yellow-700" />
               <h3 className="text-lg font-medium">Low Stock Alerts</h3>
             </div>
             <div className="space-y-3">
@@ -133,14 +133,14 @@ export function InventoryOverview({ products, stats }: InventoryOverviewProps) {
                   .map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 border border-red-200 bg-red-50 rounded"
+                      className="flex items-center justify-between p-3 border border-yellow-200 bg-yellow-50 rounded"
                     >
                       <div>
                         <p className="font-medium text-sm mb-1">{item.color}</p>
                         <p className="text-xs text-neutral-600">{item.category}</p>
                         <p className="text-xs text-neutral-500 mt-0.5">{item.quality}</p>
                       </div>
-                      <Badge variant="destructive" className="rounded-none">
+                      <Badge className="rounded-none bg-yellow-400 text-black hover:bg-yellow-400">
                         {item.quantity} left
                       </Badge>
                     </div>

@@ -123,7 +123,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
                         {product.category}
                       </Badge>
                       {product.quantity < 25 && (
-                        <Badge variant="destructive" className="rounded-none text-[10px]">
+                        <Badge className="rounded-none text-[10px] bg-yellow-400 text-black hover:bg-yellow-400">
                           Low Stock
                         </Badge>
                       )}

@@ -83,8 +83,8 @@ export function StockDetailsTab({
                 <p className="text-sm text-neutral-600 mb-1">Low Stock Items</p>
                 <p className="text-2xl">{lowStockItems}</p>
               </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-yellow-700" />
               </div>
             </div>
           </CardContent>
@@ -204,7 +204,7 @@ export function StockDetailsTab({
                     </td>
                     <td className="px-3 py-3">
                       {item.quantity < 25 ? (
-                        <Badge variant="destructive" className="rounded-none text-[10px]">
+                        <Badge className="rounded-none text-[10px] bg-yellow-400 text-black hover:bg-yellow-400">
                           Low Stock
                         </Badge>
                       ) : (

@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { ProductImage } from "@/components/product-image";
+import { KeyHighlights } from "@/components/product/key-highlights";
 import type { Product } from "@/types/product";
 
 type ProductDetailContentProps = {
@@ -238,17 +239,6 @@ export default function ProductDetailContent({
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-sm mb-3">Key Highlights</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="relative aspect-video bg-neutral-100 rounded overflow-hidden">
-                  <ProductImage src={product.image} alt={`Highlight ${i}`} sizes="150px" />
-                </div>
-              ))}
-            </div>
-          </div>
-
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h3 className="text-sm uppercase tracking-wider mb-4">Fabric &amp; Quality</h3>
@@ -278,6 +268,8 @@ export default function ProductDetailContent({
           </Card>
         </div>
       </div>
+
+      <KeyHighlights imageSrc={product.image} />
 
       <div className="mt-16">
         <h2 className="text-2xl font-serif mb-6">Frequently bought together</h2>
