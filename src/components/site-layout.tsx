@@ -50,7 +50,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                 THREADZ
               </span>
               <span className="text-[10px] tracking-widest text-muted-foreground uppercase">
-                You Design. We Make It.
+                Premium Cotton T-Shirts.
               </span>
             </Link>
 
@@ -116,26 +116,18 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                 </li>
                 <li>
                   <Link
-                    href="/shop?category=T-Shirts"
+                    href="/shop?category=Plain T-Shirts"
                     className="hover:text-foreground transition-colors"
                   >
-                    T-Shirts
+                    Plain T-Shirts
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/shop?category=Polo Shirts"
+                    href="/shop?category=Oversized T-Shirts"
                     className="hover:text-foreground transition-colors"
                   >
-                    Polo Shirts
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop?category=Heavy Jersey"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    Heavy Jersey
+                    Oversized T-Shirts
                   </Link>
                 </li>
               </ul>

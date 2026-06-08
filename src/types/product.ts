@@ -1,3 +1,12 @@
+import type { ProductCategory } from "@/data/categories";
+
+export interface SizeStock {
+  S: number;
+  M: number;
+  L: number;
+  XL: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -7,10 +16,11 @@ export interface Product {
   price: number;
   mrp: number;
   image: string;
-  category: string;
+  category: ProductCategory;
   gsm: string;
   sizes: string[];
   quantity: number;
+  sizeStock: SizeStock;
 }
 
 export interface CartItem extends Product {

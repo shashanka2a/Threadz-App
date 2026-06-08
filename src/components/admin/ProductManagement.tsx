@@ -44,6 +44,7 @@ import {
 import { Plus, Edit, Trash2, Search, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Product } from "../../types/product";
 import { products as initialProducts, categories as initialCategories } from "../../data/products";
+import { QUALITY_OPTIONS } from "../../data/categories";
 import { toast } from "sonner";
 
 export function ProductManagement() {
@@ -131,11 +132,20 @@ export function ProductManagement() {
     setIsEditDialogOpen(true);
   };
 
+  const buildSizeStock = () => ({
+    S: parseInt(formData.sizeS || "0"),
+    M: parseInt(formData.sizeM || "0"),
+    L: parseInt(formData.sizeL || "0"),
+    XL: parseInt(formData.sizeXL || "0"),
+  });
+
   const handleAdd = () => {
     if (!formData.name || !formData.category || !formData.price) {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    const sizeStock = buildSizeStock();
 
     const newProduct: Product = {
       id: (products.length + 1).toString(),
@@ -146,11 +156,11 @@ export function ProductManagement() {
       price: parseFloat(formData.price),
       mrp: parseFloat(formData.mrp),
       image: formData.image || "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
-      category: formData.category,
+      category: formData.category as Product["category"],
       gsm: formData.gsm,
       sizes: ["S", "M", "L", "XL"],
-      quantity: parseInt(formData.sizeS || "0") + parseInt(formData.sizeM || "0") +
-                parseInt(formData.sizeL || "0") + parseInt(formData.sizeXL || "0"),
+      quantity: sizeStock.S + sizeStock.M + sizeStock.L + sizeStock.XL,
+      sizeStock,
     };
 
     setProducts([...products, newProduct]);
@@ -167,6 +177,8 @@ export function ProductManagement() {
       return;
     }
 
+    const sizeStock = buildSizeStock();
+
     const updatedProducts = products.map((p) =>
       p.id === currentProduct.id
         ? {
@@ -178,10 +190,10 @@ export function ProductManagement() {
             price: parseFloat(formData.price),
             mrp: parseFloat(formData.mrp),
             image: formData.image,
-            category: formData.category,
+            category: formData.category as Product["category"],
             gsm: formData.gsm,
-            quantity: parseInt(formData.sizeS || "0") + parseInt(formData.sizeM || "0") +
-                      parseInt(formData.sizeL || "0") + parseInt(formData.sizeXL || "0"),
+            quantity: sizeStock.S + sizeStock.M + sizeStock.L + sizeStock.XL,
+            sizeStock,
           }
         : p
     );
@@ -339,13 +351,21 @@ export function ProductManagement() {
         </div>
         <div className="mt-4">
           <Label htmlFor="quality" className="text-sm">Quality / Fabric</Label>
-          <Input
-            id="quality"
+          <Select
             value={formData.quality}
-            onChange={(e) => setFormData({ ...formData, quality: e.target.value })}
-            placeholder="100% cotton 180 GSM"
-            className="rounded-none mt-1.5"
-          />
+            onValueChange={(value) => setFormData({ ...formData, quality: value })}
+          >
+            <SelectTrigger className="rounded-none mt-1.5">
+              <SelectValue placeholder="Select fabric quality" />
+            </SelectTrigger>
+            <SelectContent>
+              {QUALITY_OPTIONS.map((quality) => (
+                <SelectItem key={quality} value={quality}>
+                  {quality}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

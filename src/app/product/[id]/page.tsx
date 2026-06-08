@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { products } from "@/data/products";
+import { products, getProductsByQuality, getStockStatus } from "@/data/products";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
 import {
@@ -17,6 +18,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { ProductImage } from "@/components/product-image";
 
 export default function ProductDetailPage() {
@@ -50,15 +52,25 @@ export default function ProductDetailPage() {
     toast.success("Added to cart");
   };
 
-  const colorVariants = products.filter((p) => p.category === product.category).slice(0, 5);
-  const frequentlyBought = products.filter((p) => p.id !== product.id).slice(0, 3);
-  const randomBuyers = Math.floor(Math.random() * 300) + 100;
+  const colorVariants = getProductsByQuality(product.quality);
+  const frequentlyBought = products
+    .filter((p) => p.id !== product.id && p.category === product.category)
+    .slice(0, 3);
+  const isOversized = product.category === PRODUCT_CATEGORIES.OVERSIZED;
+  const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-2 text-sm text-neutral-600 mb-6">
         <button onClick={() => router.push("/")} className="hover:text-black">
           Home
+        </button>
+        <ChevronRight className="h-4 w-4" />
+        <button
+          onClick={() => router.push(`/shop?category=${encodeURIComponent(product.category)}`)}
+          className="hover:text-black"
+        >
+          {product.category}
         </button>
         <ChevronRight className="h-4 w-4" />
         <span className="text-black">{product.name}</span>
@@ -87,7 +99,25 @@ export default function ProductDetailPage() {
 
         <div>
           <div className="flex items-start justify-between mb-4">
-            <h1 className="text-3xl font-serif">{product.name}</h1>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="rounded-none text-xs">
+                  {product.category}
+                </Badge>
+                {isOversized && (
+                  <Badge className="rounded-none text-xs bg-neutral-900 text-white">
+                    Oversized Fit
+                  </Badge>
+                )}
+                {product.quantity < 25 && (
+                  <Badge variant="destructive" className="rounded-none text-xs">
+                    Low Stock
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-3xl font-serif">{product.name}</h1>
+              <p className="text-sm text-neutral-600 mt-2">{product.description}</p>
+            </div>
             <button className="p-2 hover:bg-neutral-100 rounded-full">
               <Share2 className="h-5 w-5" />
             </button>
@@ -96,8 +126,10 @@ export default function ProductDetailPage() {
           <div className="flex items-baseline gap-3 mb-2">
             <span className="text-3xl">₹{product.price}</span>
             <span className="text-lg text-neutral-500 line-through">MRP: ₹{product.mrp}</span>
+            <span className="text-sm text-green-600">{discount}% OFF</span>
           </div>
           <p className="text-sm text-neutral-600 mb-1">inclusive of all taxes</p>
+          <p className="text-sm text-neutral-500 mb-4">{product.quantity} units in stock</p>
 
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center gap-1">
@@ -108,10 +140,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <p className="text-sm text-red-600 mb-1">Lowest price in last 30 days</p>
-          <p className="text-sm text-red-600 mb-6">
-            {randomBuyers} people bought this in last 7 days
-          </p>
+          <p className="text-sm text-red-600 mb-6">Lowest price in last 30 days</p>
 
           <div className="mb-6">
             <h3 className="text-sm mb-3">Save extra with these offers</h3>
@@ -162,20 +191,32 @@ export default function ProductDetailPage() {
               <button className="text-sm text-blue-600 hover:underline">Size Guide</button>
             </div>
             <div className="flex gap-3 flex-wrap">
-              {product.sizes.map((size) => (
-                <Button
-                  key={size}
-                  variant={selectedSize === size ? "default" : "outline"}
-                  onClick={() => setSelectedSize(size)}
-                  className={`min-w-[60px] rounded-none ${
-                    selectedSize === size
-                      ? "bg-black text-white border-black"
-                      : "border-neutral-300 hover:border-black"
-                  }`}
-                >
-                  {size}
-                </Button>
-              ))}
+              {product.sizes.map((size) => {
+                const stock = product.sizeStock[size as keyof typeof product.sizeStock];
+                const status = getStockStatus(stock);
+                const disabled = status === "out-of-stock";
+
+                return (
+                  <Button
+                    key={size}
+                    variant={selectedSize === size ? "default" : "outline"}
+                    disabled={disabled}
+                    onClick={() => setSelectedSize(size)}
+                    className={`min-w-[72px] rounded-none flex flex-col h-auto py-2 ${
+                      selectedSize === size
+                        ? "bg-black text-white border-black"
+                        : disabled
+                          ? "border-neutral-200 text-neutral-400 opacity-50"
+                          : "border-neutral-300 hover:border-black"
+                    }`}
+                  >
+                    <span>{size}</span>
+                    <span className="text-[10px] font-normal opacity-80">
+                      {stock > 0 ? `${stock} left` : "Out"}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -224,23 +265,34 @@ export default function ProductDetailPage() {
 
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
-              <h3 className="text-sm uppercase tracking-wider mb-4">Product Details</h3>
+              <h3 className="text-sm uppercase tracking-wider mb-4">Fabric &amp; Quality</h3>
               <div className="space-y-2 text-sm text-neutral-600">
-                <div className="flex justify-between">
-                  <span>Fabric Weight:</span>
-                  <span>{product.gsm}</span>
+                <div className="flex justify-between gap-4">
+                  <span>Category</span>
+                  <span className="text-right">{product.category}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Quality:</span>
-                  <span>{product.quality}</span>
+                <div className="flex justify-between gap-4">
+                  <span>Fabric Weight</span>
+                  <span className="text-right">{product.gsm}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Color:</span>
-                  <span>{product.color}</span>
+                <div className="flex justify-between gap-4">
+                  <span>Quality</span>
+                  <span className="text-right max-w-[60%]">{product.quality}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Available Sizes:</span>
-                  <span>{product.sizes.join(", ")}</span>
+                <div className="flex justify-between gap-4">
+                  <span>Color</span>
+                  <span className="text-right">{product.color}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>Fit</span>
+                  <span className="text-right">{isOversized ? "Oversized" : "Regular"}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>Size Stock</span>
+                  <span className="text-right">
+                    S:{product.sizeStock.S} M:{product.sizeStock.M} L:{product.sizeStock.L} XL:
+                    {product.sizeStock.XL}
+                  </span>
                 </div>
               </div>
             </CardContent>

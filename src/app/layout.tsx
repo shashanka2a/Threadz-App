@@ -19,17 +19,17 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "THREADZ — You Design. We Make It.",
+    default: "THREADZ — Premium Cotton T-Shirts",
     template: "%s | THREADZ",
   },
   description:
-    "Create custom apparel with AI-powered designs on premium fabrics. Upload your design or generate one with AI Studio.",
-  keywords: ["custom t-shirts", "AI design", "apparel", "print on demand", "THREADZ"],
+    "Premium cotton t-shirts in plain and oversized fits, with rich colours and durable GSM fabrics.",
+  keywords: ["plain t-shirts", "oversized t-shirts", "heavy jersey", "interlock", "THREADZ"],
   authors: [{ name: "THREADZ" }],
   openGraph: {
-    title: "THREADZ — You Design. We Make It.",
+    title: "THREADZ — Premium Cotton T-Shirts",
     description:
-      "Create custom apparel with AI-powered designs on premium fabrics.",
+      "Premium cotton t-shirts in plain and oversized fits, with rich colours and durable GSM fabrics.",
     type: "website",
     siteName: "THREADZ",
     images: [
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "THREADZ — You Design. We Make It.",
+    title: "THREADZ — Premium Cotton T-Shirts",
     description:
-      "Create custom apparel with AI-powered designs on premium fabrics.",
+      "Premium cotton t-shirts in plain and oversized fits, with rich colours and durable GSM fabrics.",
     images: ["/og-image.svg"],
   },
   icons: {

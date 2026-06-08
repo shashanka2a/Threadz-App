@@ -109,15 +109,26 @@ export default function ShopContent() {
                     </Badge>
                   )}
                 </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-1 mb-1">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="rounded-none text-[10px]">
+                        {product.category}
+                      </Badge>
+                      {product.quantity < 25 && (
+                        <Badge variant="destructive" className="rounded-none text-[10px]">
+                          Low Stock
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mb-1">
                     {[1, 2, 3, 4].map((star) => (
                       <Star key={star} className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                     ))}
                     <Star className="w-3 h-3 text-neutral-300" />
                   </div>
-                  <h3 className="font-medium mb-1">{product.name}</h3>
-                  <p className="text-sm text-neutral-600 mb-2">{product.color}</p>
+                    <h3 className="font-medium mb-1">{product.name}</h3>
+                    <p className="text-sm text-neutral-600 mb-1">{product.color}</p>
+                    <p className="text-xs text-neutral-500 mb-2 line-clamp-1">{product.quality}</p>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">₹{product.price}</span>
                     <span className="text-sm text-neutral-500 line-through">₹{product.mrp}</span>

@@ -17,15 +17,15 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-6xl md:text-8xl mb-6">
-            <span className="font-serif text-foreground">You Design.</span>
+            <span className="font-serif text-foreground">Premium.</span>
             <br />
-            <span className="font-serif italic text-muted-foreground">We Make It.</span>
+            <span className="font-serif italic text-muted-foreground">Everyday T-Shirts.</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-4">
-            Upload your design or create one with AI.
+            Plain and oversized cotton t-shirts in rich colours and durable GSM fabrics.
           </p>
           <p className="text-lg text-muted-foreground mb-8">
-            We&apos;ll print it on premium fabric and ship it to your door.
+            Built for everyday comfort, bulk orders, and merch drops.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Button
@@ -80,6 +80,11 @@ export default function HomePage() {
                     )}
                   </div>
                   <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="rounded-none text-[10px]">
+                        {product.category}
+                      </Badge>
+                    </div>
                     <div className="flex items-center gap-1 mb-1">
                       {[1, 2, 3, 4].map((star) => (
                         <Star
@@ -90,7 +95,8 @@ export default function HomePage() {
                       <Star className="w-3 h-3 text-muted-foreground" />
                     </div>
                     <h3 className="font-medium mb-1 text-card-foreground">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{product.color}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{product.color}</p>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{product.quality}</p>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-lg text-card-foreground">₹{product.price}</span>
                       <span className="text-sm text-muted-foreground line-through">

@@ -14,7 +14,7 @@ export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
 
   const handleCheckout = () => {
-    toast.success("Proceeding to checkout...");
+    router.push("/checkout/shipping");
   };
 
   if (cartItems.length === 0) {

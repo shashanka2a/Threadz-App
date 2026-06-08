@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { inventoryData } from "@/data/inventory";
 import { Package, AlertTriangle, TrendingUp, Search, Download, BarChart3, FolderOpen } from "lucide-react";
 import { ProductManagement } from "@/components/admin/ProductManagement";
@@ -48,7 +49,7 @@ export default function InventoryPage() {
   const totalInventoryValue = inventoryData.reduce((sum, item) => sum + item.totalPrice, 0);
   const totalQuantity = inventoryData.reduce((sum, item) => sum + item.quantity, 0);
   const lowStockItems = inventoryData.filter((item) => item.quantity < 25).length;
-  const categories = ["All", "T-Shirts", "Polo Shirts", "Heavy Jersey"];
+  const categories = ["All", PRODUCT_CATEGORIES.PLAIN, PRODUCT_CATEGORIES.OVERSIZED];
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -245,8 +246,8 @@ function StockDetailsTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInventory.map((item, index) => (
-                  <TableRow key={index} className="hover:bg-neutral-50">
+                {filteredInventory.map((item) => (
+                  <TableRow key={item.id} className="hover:bg-neutral-50">
                     <TableCell className="font-medium max-w-[200px]">
                       <div className="text-sm">{item.quality}</div>
                     </TableCell>

@@ -35,6 +35,8 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PRODUCT_CATEGORIES, CATEGORY_DESCRIPTIONS } from "../../data/categories";
+import { products as initialProducts } from "../../data/products";
 
 interface Category {
   id: string;
@@ -45,10 +47,18 @@ interface Category {
 
 export function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([
-    { id: "1", name: "T-Shirts", description: "Classic cotton t-shirts", productCount: 6 },
-    { id: "2", name: "Polo Shirts", description: "Premium polo shirts", productCount: 3 },
-    { id: "3", name: "Heavy Jersey", description: "Oversized heavy jersey t-shirts", productCount: 4 },
-    { id: "4", name: "Interlock", description: "Soft interlock cotton apparel", productCount: 0 },
+    {
+      id: "1",
+      name: PRODUCT_CATEGORIES.PLAIN,
+      description: CATEGORY_DESCRIPTIONS[PRODUCT_CATEGORIES.PLAIN],
+      productCount: initialProducts.filter((p) => p.category === PRODUCT_CATEGORIES.PLAIN).length,
+    },
+    {
+      id: "2",
+      name: PRODUCT_CATEGORIES.OVERSIZED,
+      description: CATEGORY_DESCRIPTIONS[PRODUCT_CATEGORIES.OVERSIZED],
+      productCount: initialProducts.filter((p) => p.category === PRODUCT_CATEGORIES.OVERSIZED).length,
+    },
   ]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

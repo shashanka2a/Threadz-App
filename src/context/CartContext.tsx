@@ -1,7 +1,19 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { CartItem, Product } from "../types/product";
+
+export type ShippingAddress = {
+  fullName: string;
+  phone: string;
+  email: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -9,14 +21,42 @@ interface CartContextType {
   removeFromCart: (id: string, size: string) => void;
   updateQuantity: (id: string, size: string, quantity: number) => void;
   clearCart: () => void;
+  shippingAddress: ShippingAddress | null;
+  setShippingAddress: (address: ShippingAddress) => void;
+  clearShippingAddress: () => void;
   cartCount: number;
   cartTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = "threadz.checkout.shippingAddress";
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [shippingAddress, setShippingAddressState] =
+    useState<ShippingAddress | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setShippingAddressState(JSON.parse(raw) as ShippingAddress);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (shippingAddress) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(shippingAddress));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // ignore
+    }
+  }, [shippingAddress]);
 
   const addToCart = (product: Product, size: string, quantity: number) => {
     setCartItems((prev) => {
@@ -64,6 +104,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartItems([]);
   };
 
+  const setShippingAddress = (address: ShippingAddress) => {
+    setShippingAddressState(address);
+  };
+
+  const clearShippingAddress = () => {
+    setShippingAddressState(null);
+  };
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.cartQuantity, 0);
   const cartTotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.cartQuantity,
@@ -78,6 +126,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        shippingAddress,
+        setShippingAddress,
+        clearShippingAddress,
         cartCount,
         cartTotal,
       }}
