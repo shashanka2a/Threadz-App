@@ -1,4 +1,9 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const HIGHLIGHTS = [
   {
@@ -32,7 +37,7 @@ type KeyHighlightsProps = {
 };
 
 function HighlightIcon({ type }: { type: (typeof HIGHLIGHTS)[number]["icon"] }) {
-  const className = "h-5 w-5 text-neutral-900";
+  const className = "h-4 w-4 text-neutral-900";
 
   if (type === "fabric") {
     return (
@@ -105,39 +110,79 @@ function HighlightIcon({ type }: { type: (typeof HIGHLIGHTS)[number]["icon"] }) 
 }
 
 export function KeyHighlights({ imageSrc }: KeyHighlightsProps) {
-  return (
-    <section className="mt-16">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-serif mb-2">Key Highlights</h2>
-        <p className="text-neutral-600">Every detail, crafted for everyday comfort.</p>
-      </div>
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
-        {HIGHLIGHTS.map((item) => (
-          <div key={item.title} className="flex flex-col items-center text-center px-2">
-            <div className="relative w-full max-w-[240px] mx-auto mb-8">
-              <div className="aspect-square rounded-xl overflow-hidden bg-neutral-100">
-                <Image
-                  src={imageSrc}
-                  alt={item.title}
-                  width={480}
-                  height={480}
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 240px"
-                  className="h-full w-full object-cover scale-150"
-                  style={{ objectPosition: item.objectPosition }}
-                />
+  const scroll = (direction: "left" | "right") => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const amount = container.clientWidth * 0.85;
+    container.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className="mb-6">
+      <h3 className="text-sm mb-1">Key Highlights</h3>
+      <p className="text-xs text-neutral-600 mb-3">
+        Every detail, crafted for everyday comfort.
+      </p>
+
+      <div className="relative px-9">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("left")}
+          className="absolute left-0 top-[72px] z-10 h-8 w-8 rounded-full border-neutral-300 bg-white shadow-sm"
+          aria-label="Scroll highlights left"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {HIGHLIGHTS.map((item) => (
+            <div
+              key={item.title}
+              className="flex w-[calc(50%-6px)] min-w-[calc(50%-6px)] shrink-0 snap-start flex-col items-center text-center"
+            >
+              <div className="relative mb-6 w-full">
+                <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">
+                  <Image
+                    src={imageSrc}
+                    alt={item.title}
+                    width={320}
+                    height={320}
+                    sizes="180px"
+                    className="h-full w-full scale-150 object-cover"
+                    style={{ objectPosition: item.objectPosition }}
+                  />
+                </div>
+                <div className="absolute -bottom-4 left-1/2 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-sm">
+                  <HighlightIcon type={item.icon} />
+                </div>
               </div>
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-5 flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-sm">
-                <HighlightIcon type={item.icon} />
-              </div>
+              <h4 className="mb-1 text-xs font-semibold text-neutral-900">{item.title}</h4>
+              <p className="text-[11px] leading-relaxed text-neutral-600">{item.description}</p>
             </div>
-            <h3 className="font-semibold text-neutral-900 mb-1.5">{item.title}</h3>
-            <p className="text-sm text-neutral-600 leading-relaxed max-w-[220px]">
-              {item.description}
-            </p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("right")}
+          className="absolute right-0 top-[72px] z-10 h-8 w-8 rounded-full border-neutral-300 bg-white shadow-sm"
+          aria-label="Scroll highlights right"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
-    </section>
+    </div>
   );
 }

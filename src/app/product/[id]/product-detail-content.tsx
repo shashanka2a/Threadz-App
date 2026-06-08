@@ -239,6 +239,8 @@ export default function ProductDetailContent({
             </div>
           </div>
 
+          <KeyHighlights imageSrc={product.image} />
+
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h3 className="text-sm uppercase tracking-wider mb-4">Fabric &amp; Quality</h3>
@@ -268,8 +270,6 @@ export default function ProductDetailContent({
           </Card>
         </div>
       </div>
-
-      <KeyHighlights imageSrc={product.image} />
 
       <div className="mt-16">
         <h2 className="text-2xl font-serif mb-6">Frequently bought together</h2>
