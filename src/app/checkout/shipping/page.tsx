@@ -4,21 +4,32 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, type ShippingAddress } from "@/context/CartContext";
 import { OrderSummary } from "@/components/checkout/order-summary";
+import { CheckoutProgress } from "@/components/checkout/checkout-progress";
+import { CheckoutLoadingOverlay } from "@/components/checkout/checkout-loading-overlay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const DEFAULT_COUNTRY = "India";
 
+const checkoutInputClass =
+  "rounded-none mt-1.5 border-neutral-300 bg-white focus-visible:border-foreground focus-visible:ring-foreground/20";
+
 export default function ShippingPage() {
   const router = useRouter();
   const { cartItems, shippingAddress, setShippingAddress } = useCart();
+  const [isCheckingCart, setIsCheckingCart] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (cartItems.length === 0) router.replace("/cart");
+    if (cartItems.length === 0) {
+      router.replace("/cart");
+      return;
+    }
+    setIsCheckingCart(false);
   }, [cartItems.length, router]);
 
   const initial = useMemo<ShippingAddress>(
@@ -40,7 +51,6 @@ export default function ShippingPage() {
   const [form, setForm] = useState<ShippingAddress>(initial);
 
   useEffect(() => {
-    // if context updates (back from payment), keep it in sync
     setForm(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shippingAddress?.fullName]);
@@ -61,19 +71,30 @@ export default function ShippingPage() {
     return null;
   };
 
-  const onContinue = () => {
+  const onContinue = async () => {
     const error = validate();
     if (error) {
       toast.error(error);
       return;
     }
+
+    setIsSubmitting(true);
     setShippingAddress(form);
+    await new Promise((resolve) => setTimeout(resolve, 600));
     router.push("/checkout/payment");
   };
 
+  if (isCheckingCart) {
+    return <CheckoutLoadingOverlay message="Loading checkout..." />;
+  }
+
   return (
     <div className="container mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+      {isSubmitting && (
+        <CheckoutLoadingOverlay message="Saving shipping details..." />
+      )}
+
+      <div className="flex items-center justify-between mb-4">
         <Button variant="ghost" className="rounded-none" onClick={() => router.push("/cart")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to cart
@@ -81,19 +102,21 @@ export default function ShippingPage() {
         <div className="text-sm text-neutral-600">Checkout · Shipping</div>
       </div>
 
+      <CheckoutProgress current="shipping" />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h1 className="text-3xl font-serif mb-6">Shipping details</h1>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <fieldset disabled={isSubmitting} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <Label className="text-sm">Full name</Label>
                   <Input
                     value={form.fullName}
                     onChange={(e) => setField("fullName", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="Your name"
                   />
                 </div>
@@ -103,7 +126,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.phone}
                     onChange={(e) => setField("phone", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="+91 ..."
                   />
                 </div>
@@ -111,9 +134,10 @@ export default function ShippingPage() {
                 <div>
                   <Label className="text-sm">Email</Label>
                   <Input
+                    type="email"
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="you@example.com"
                   />
                 </div>
@@ -123,7 +147,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.addressLine1}
                     onChange={(e) => setField("addressLine1", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="House no, street, area"
                   />
                 </div>
@@ -133,7 +157,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.addressLine2 ?? ""}
                     onChange={(e) => setField("addressLine2", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="Landmark, apartment, etc."
                   />
                 </div>
@@ -143,7 +167,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.city}
                     onChange={(e) => setField("city", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="Mumbai"
                   />
                 </div>
@@ -153,7 +177,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.state}
                     onChange={(e) => setField("state", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="Maharashtra"
                   />
                 </div>
@@ -163,7 +187,7 @@ export default function ShippingPage() {
                   <Input
                     value={form.postalCode}
                     onChange={(e) => setField("postalCode", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder="400001"
                   />
                 </div>
@@ -173,18 +197,34 @@ export default function ShippingPage() {
                   <Input
                     value={form.country}
                     onChange={(e) => setField("country", e.target.value)}
-                    className="rounded-none mt-1.5"
+                    className={checkoutInputClass}
                     placeholder={DEFAULT_COUNTRY}
                   />
                 </div>
-              </div>
+              </fieldset>
 
               <div className="mt-8 flex gap-3 justify-end">
-                <Button variant="outline" className="rounded-none" onClick={() => router.push("/shop")}>
+                <Button
+                  variant="outline"
+                  className="rounded-none"
+                  onClick={() => router.push("/shop")}
+                  disabled={isSubmitting}
+                >
                   Continue shopping
                 </Button>
-                <Button className="rounded-none bg-black text-white hover:bg-neutral-800" onClick={onContinue}>
-                  Continue to payment
+                <Button
+                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[180px]"
+                  onClick={onContinue}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Continuing...
+                    </>
+                  ) : (
+                    "Continue to payment"
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -200,4 +240,3 @@ export default function ShippingPage() {
     </div>
   );
 }
-

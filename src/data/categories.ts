@@ -35,3 +35,14 @@ export function getCategoryFromQuality(quality: string): ProductCategory {
     ? PRODUCT_CATEGORIES.OVERSIZED
     : PRODUCT_CATEGORIES.PLAIN;
 }
+
+export const RETAIL_PRICE_STANDARD = 499;
+export const RETAIL_PRICE_PREMIUM = 599;
+
+/** Standard 180 GSM plain tees sell at ₹499; premium fabrics at ₹599. */
+export function getRetailPrice(quality: string): number {
+  if (/180\s*GSM/i.test(quality) && !/OVERSIZED/i.test(quality)) {
+    return RETAIL_PRICE_STANDARD;
+  }
+  return RETAIL_PRICE_PREMIUM;
+}

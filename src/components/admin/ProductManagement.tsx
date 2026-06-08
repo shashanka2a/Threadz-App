@@ -44,7 +44,7 @@ import {
 import { Plus, Edit, Trash2, Search, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Product } from "../../types/product";
 import { products as initialProducts, categories as initialCategories } from "../../data/products";
-import { QUALITY_OPTIONS } from "../../data/categories";
+import { QUALITY_OPTIONS, getRetailPrice } from "../../data/categories";
 import { toast } from "sonner";
 
 export function ProductManagement() {
@@ -353,7 +353,13 @@ export function ProductManagement() {
           <Label htmlFor="quality" className="text-sm">Quality / Fabric</Label>
           <Select
             value={formData.quality}
-            onValueChange={(value) => setFormData({ ...formData, quality: value })}
+            onValueChange={(value) =>
+              setFormData({
+                ...formData,
+                quality: value,
+                price: String(getRetailPrice(value)),
+              })
+            }
           >
             <SelectTrigger className="rounded-none mt-1.5">
               <SelectValue placeholder="Select fabric quality" />
@@ -384,7 +390,7 @@ export function ProductManagement() {
                 type="number"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="160"
+                placeholder="499"
                 className="rounded-none pl-7"
               />
             </div>

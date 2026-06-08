@@ -1,19 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Trash2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { CheckoutProgress } from "@/components/checkout/checkout-progress";
 
 export default function CartPage() {
   const router = useRouter();
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
 
-  const handleCheckout = () => {
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
     router.push("/checkout/shipping");
   };
 
@@ -45,6 +51,8 @@ export default function CartPage() {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Continue Shopping
       </Button>
+
+      <CheckoutProgress current="cart" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -175,9 +183,17 @@ export default function CartPage() {
               <Button
                 size="lg"
                 onClick={handleCheckout}
+                disabled={isCheckingOut}
                 className="w-full bg-black text-white hover:bg-neutral-800 rounded-none"
               >
-                Proceed to Checkout
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Starting checkout...
+                  </>
+                ) : (
+                  "Proceed to Checkout"
+                )}
               </Button>
 
               <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200">

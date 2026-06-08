@@ -3,15 +3,92 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ShoppingCart, Moon, Sun, User } from "lucide-react";
+import {
+  ShoppingCart,
+  Moon,
+  Sun,
+  User,
+  Menu,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
+import { PRODUCT_CATEGORIES } from "@/data/categories";
 
-export function SiteLayout({ children }: { children: React.ReactNode }) {
+const NAV_LINKS = [
+  { href: "/shop", label: "Shop" },
+  {
+    href: `/shop?category=${encodeURIComponent(PRODUCT_CATEGORIES.PLAIN)}`,
+    label: "Plain T-Shirts",
+  },
+  {
+    href: `/shop?category=${encodeURIComponent(PRODUCT_CATEGORIES.OVERSIZED)}`,
+    label: "Oversized T-Shirts",
+  },
+  { href: "/ai-studio", label: "AI Studio" },
+  { href: "/inventory", label: "Inventory" },
+];
+
+function Logo({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link href="/" className="flex flex-col items-center text-center min-w-0">
+      <span
+        className={`tracking-wider font-serif text-foreground ${
+          compact ? "text-xl sm:text-2xl" : "text-2xl"
+        }`}
+      >
+        THREADZ
+      </span>
+      <span
+        className={`tracking-widest text-muted-foreground uppercase ${
+          compact
+            ? "hidden min-[380px]:block text-[9px] leading-tight max-w-[140px] truncate"
+            : "text-[10px]"
+        }`}
+      >
+        Premium Cotton T-Shirts.
+      </span>
+    </Link>
+  );
+}
+
+function CartButton({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
   const { cartCount } = useCart();
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => {
+        onNavigate?.();
+        router.push("/cart");
+      }}
+      className="rounded-full relative shrink-0"
+    >
+      <ShoppingCart className="h-4 w-4" />
+      {cartCount > 0 && (
+        <Badge
+          variant="default"
+          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-black text-white"
+        >
+          {cartCount}
+        </Badge>
+      )}
+      <span className="sr-only">Cart ({cartCount})</span>
+    </Button>
+  );
+}
+
+function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -21,15 +98,101 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
   const darkMode = mounted && resolvedTheme === "dark";
 
-  const toggleDarkMode = () => {
-    setTheme(darkMode ? "light" : "dark");
-  };
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(darkMode ? "light" : "dark")}
+      className={`rounded-full shrink-0 ${className ?? ""}`}
+    >
+      {mounted && darkMode ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
+}
+
+function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+  const router = useRouter();
+
+  return (
+    <SheetContent side="left" className="w-[min(100vw-2rem,320px)] rounded-none p-0">
+      <SheetHeader className="border-b border-border px-6 py-5 text-left">
+        <SheetTitle className="font-serif text-xl tracking-wider">THREADZ</SheetTitle>
+        <p className="text-xs text-muted-foreground uppercase tracking-widest">
+          Premium Cotton T-Shirts
+        </p>
+      </SheetHeader>
+
+      <nav className="flex flex-col px-2 py-4">
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={onNavigate}
+            className="px-4 py-3 text-sm uppercase tracking-wider text-foreground hover:bg-muted transition-colors"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="mt-auto border-t border-border px-6 py-5 space-y-3">
+        <Button
+          variant="outline"
+          className="w-full rounded-none justify-start"
+          onClick={() => {
+            onNavigate();
+            router.push("/cart");
+          }}
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          View cart
+        </Button>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Theme</span>
+          <ThemeToggle />
+        </div>
+      </div>
+    </SheetContent>
+  );
+}
+
+export function SiteLayout({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <div className="min-h-screen bg-background transition-colors">
-      <header className="border-b border-border bg-background transition-colors">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          {/* Mobile header */}
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full shrink-0">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <MobileNav onNavigate={closeMobileMenu} />
+            </Sheet>
+
+            <div className="flex justify-center px-1">
+              <Logo compact />
+            </div>
+
+            <div className="flex items-center justify-end gap-0.5">
+              <CartButton />
+            </div>
+          </div>
+
+          {/* Desktop header */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center gap-8">
               <Link
                 href="/shop"
@@ -45,49 +208,15 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
 
-            <Link href="/" className="flex flex-col items-center">
-              <span className="text-2xl tracking-wider font-serif text-foreground">
-                THREADZ
-              </span>
-              <span className="text-[10px] tracking-widest text-muted-foreground uppercase">
-                Premium Cotton T-Shirts.
-              </span>
-            </Link>
+            <Logo />
 
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleDarkMode}
-                className="rounded-full"
-              >
-                {mounted && darkMode ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
+              <ThemeToggle />
               <Button variant="ghost" size="icon" className="rounded-full">
                 <User className="h-4 w-4" />
                 <span className="sr-only">Account</span>
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/cart")}
-                className="rounded-full relative"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {cartCount > 0 && (
-                  <Badge
-                    variant="default"
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-black text-white"
-                  >
-                    {cartCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Cart ({cartCount})</span>
-              </Button>
+              <CartButton />
             </div>
           </div>
         </div>
@@ -101,7 +230,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
             <div>
               <h3 className="font-serif text-lg mb-4 text-foreground">THREADZ</h3>
               <p className="text-sm text-muted-foreground">
-                Create custom apparel with AI-powered designs on premium fabrics.
+                Premium cotton t-shirts in plain and oversized fits for everyday wear.
               </p>
             </div>
             <div>
@@ -116,7 +245,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                 </li>
                 <li>
                   <Link
-                    href="/shop?category=Plain T-Shirts"
+                    href={`/shop?category=${encodeURIComponent(PRODUCT_CATEGORIES.PLAIN)}`}
                     className="hover:text-foreground transition-colors"
                   >
                     Plain T-Shirts
@@ -124,7 +253,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                 </li>
                 <li>
                   <Link
-                    href="/shop?category=Oversized T-Shirts"
+                    href={`/shop?category=${encodeURIComponent(PRODUCT_CATEGORIES.OVERSIZED)}`}
                     className="hover:text-foreground transition-colors"
                   >
                     Oversized T-Shirts

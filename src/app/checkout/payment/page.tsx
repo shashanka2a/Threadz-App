@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { OrderSummary } from "@/components/checkout/order-summary";
+import { CheckoutProgress } from "@/components/checkout/checkout-progress";
+import { CheckoutLoadingOverlay } from "@/components/checkout/checkout-loading-overlay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, CreditCard, Landmark, Wallet } from "lucide-react";
+import { ArrowLeft, CreditCard, Landmark, Loader2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 type PaymentMethod = "upi" | "card" | "cod";
@@ -26,20 +28,23 @@ function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["ship
 export default function PaymentPage() {
   const router = useRouter();
   const { cartItems, shippingAddress, clearCart, clearShippingAddress } = useCart();
-
-  useEffect(() => {
-    if (cartItems.length === 0) router.replace("/cart");
-  }, [cartItems.length, router]);
-
-  useEffect(() => {
-    if (!shippingAddress) router.replace("/checkout/shipping");
-  }, [shippingAddress, router]);
-
+  const [isChecking, setIsChecking] = useState(true);
   const [method, setMethod] = useState<PaymentMethod>("upi");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      router.replace("/cart");
+      return;
+    }
+    if (!shippingAddress) {
+      router.replace("/checkout/shipping");
+      return;
+    }
+    setIsChecking(false);
+  }, [cartItems.length, shippingAddress, router]);
+
   const orderId = useMemo(() => {
-    // lightweight deterministic-ish id for demo flow
     const now = Date.now().toString(36).toUpperCase();
     return `TZ-${now.slice(-8)}`;
   }, []);
@@ -49,26 +54,33 @@ export default function PaymentPage() {
 
     setIsPlacingOrder(true);
     try {
-      // Simulate payment processing
-      await new Promise((r) => setTimeout(r, 900));
+      await new Promise((r) => setTimeout(r, 1500));
       toast.success("Payment accepted. Order placed!");
       clearCart();
       clearShippingAddress();
       router.push(`/checkout/success?orderId=${encodeURIComponent(orderId)}`);
-    } finally {
+    } catch {
+      toast.error("Payment failed. Please try again.");
       setIsPlacingOrder(false);
     }
   };
 
-  if (!shippingAddress) return null;
+  if (isChecking || !shippingAddress) {
+    return <CheckoutLoadingOverlay message="Loading payment..." />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+      {isPlacingOrder && (
+        <CheckoutLoadingOverlay message="Processing your payment..." />
+      )}
+
+      <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
           className="rounded-none"
           onClick={() => router.push("/checkout/shipping")}
+          disabled={isPlacingOrder}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to shipping
@@ -76,23 +88,25 @@ export default function PaymentPage() {
         <div className="text-sm text-neutral-600">Checkout · Payment</div>
       </div>
 
+      <CheckoutProgress current="payment" />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h1 className="text-3xl font-serif mb-2">Payment</h1>
               <p className="text-sm text-neutral-600">
-                Choose a payment method. (This demo flow simulates payment success.)
+                Choose a payment method to complete your order.
               </p>
 
-              <div className="mt-6">
+              <fieldset disabled={isPlacingOrder} className="mt-6">
                 <Label className="text-sm">Payment method</Label>
                 <RadioGroup
                   className="mt-3 space-y-3"
                   value={method}
                   onValueChange={(v) => setMethod(v as PaymentMethod)}
                 >
-                  <div className="flex items-start gap-3 border border-neutral-200 p-4 rounded-none">
+                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
                     <RadioGroupItem value="upi" id="upi" className="mt-1" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -102,12 +116,12 @@ export default function PaymentPage() {
                         </Label>
                       </div>
                       <p className="text-xs text-neutral-600 mt-1">
-                        Pay via UPI apps (simulated).
+                        Pay via UPI apps (GPay, PhonePe, Paytm).
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 border border-neutral-200 p-4 rounded-none">
+                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
                     <RadioGroupItem value="card" id="card" className="mt-1" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -117,12 +131,12 @@ export default function PaymentPage() {
                         </Label>
                       </div>
                       <p className="text-xs text-neutral-600 mt-1">
-                        Debit / Credit card (simulated).
+                        Debit / Credit card.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 border border-neutral-200 p-4 rounded-none">
+                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
                     <RadioGroupItem value="cod" id="cod" className="mt-1" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -137,22 +151,30 @@ export default function PaymentPage() {
                     </div>
                   </div>
                 </RadioGroup>
-              </div>
+              </fieldset>
 
               <div className="mt-8 flex gap-3 justify-end">
                 <Button
                   variant="outline"
                   className="rounded-none"
                   onClick={() => router.push("/checkout/shipping")}
+                  disabled={isPlacingOrder}
                 >
                   Edit shipping
                 </Button>
                 <Button
-                  className="rounded-none bg-black text-white hover:bg-neutral-800"
+                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[180px]"
                   onClick={placeOrder}
                   disabled={isPlacingOrder}
                 >
-                  {isPlacingOrder ? "Placing order..." : "Pay & place order"}
+                  {isPlacingOrder ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Pay & place order"
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -183,4 +205,3 @@ export default function PaymentPage() {
     </div>
   );
 }
-

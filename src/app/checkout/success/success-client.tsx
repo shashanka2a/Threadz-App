@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
+import { CheckoutProgress } from "@/components/checkout/checkout-progress";
 
 export default function SuccessClient() {
   const params = useSearchParams();
@@ -14,6 +15,7 @@ export default function SuccessClient() {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      <CheckoutProgress current="success" />
       <div className="max-w-2xl mx-auto">
         <Card className="border-neutral-200 rounded-none">
           <CardContent className="p-10 text-center">
