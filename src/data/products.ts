@@ -2,11 +2,16 @@ import { Product } from "../types/product";
 import { PRODUCT_CATEGORIES, SHOP_CATEGORIES } from "./categories";
 import { inventoryData } from "./inventory";
 
+const PRODUCT_IMAGES = {
+  charcoal:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/charcoal.png",
+  grey:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/grey.png",
+} as const;
+
 const images: Record<string, string> = {
-  "Charcoal Melange":
-    "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Grey Melange":
-    "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  "Charcoal Melange": PRODUCT_IMAGES.charcoal,
+  "Grey Melange": PRODUCT_IMAGES.grey,
   Cream:
     "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   "LT Green":
