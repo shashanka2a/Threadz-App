@@ -80,7 +80,7 @@ values
     'https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     'Plain T-Shirts',
     '180 GSM',
-    7, 7, 7, 7, 28
+    9, 9, 9, 9, 36
   ),
   (
     '4',
@@ -94,7 +94,7 @@ values
     'https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     'Plain T-Shirts',
     '180 GSM',
-    7, 7, 7, 7, 28
+    9, 9, 9, 9, 36
   ),
   (
     '5',
@@ -122,7 +122,7 @@ values
     'https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     'Plain T-Shirts',
     '180 GSM',
-    9, 9, 9, 9, 36
+    8, 8, 8, 8, 32
   ),
   (
     '7',
@@ -164,7 +164,7 @@ values
     'https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     'Plain T-Shirts',
     '200 GSM',
-    4, 5, 5, 5, 19
+    5, 5, 4, 5, 19
   ),
   (
     '10',

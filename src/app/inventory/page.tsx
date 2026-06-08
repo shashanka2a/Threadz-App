@@ -13,14 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { inventoryData } from "@/data/inventory";
 import { Package, AlertTriangle, TrendingUp, Search, Download, BarChart3, FolderOpen } from "lucide-react";
@@ -138,6 +130,8 @@ function StockDetailsTab({
   lowStockItems: number;
   categories: string[];
 }) {
+  const filteredTotalQty = filteredInventory.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -228,65 +222,109 @@ function StockDetailsTab({
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-200 rounded-none">
+      <Card className="border-neutral-200 rounded-none overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quality</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-center">S</TableHead>
-                  <TableHead className="text-center">M</TableHead>
-                  <TableHead className="text-center">L</TableHead>
-                  <TableHead className="text-center">XL</TableHead>
-                  <TableHead className="text-center">Total Qty</TableHead>
-                  <TableHead className="text-right">Price/Unit</TableHead>
-                  <TableHead className="text-right">Total Value</TableHead>
-                  <TableHead className="text-right">MRP</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[24%]" />
+                <col className="w-[11%]" />
+                <col className="w-[12%]" />
+                <col className="w-[4%]" />
+                <col className="w-[4%]" />
+                <col className="w-[4%]" />
+                <col className="w-[4%]" />
+                <col className="w-[6%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[7%]" />
+                <col className="w-[7%]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-neutral-300 bg-amber-50">
+                  <th className="px-3 py-3 text-left font-semibold text-neutral-900 align-middle">
+                    Quality
+                  </th>
+                  <th className="px-3 py-3 text-left font-semibold text-neutral-900 align-middle">
+                    Color
+                  </th>
+                  <th className="px-3 py-3 text-left font-semibold text-neutral-900 align-middle">
+                    Category
+                  </th>
+                  <th className="px-2 py-3 text-center font-semibold text-neutral-900">S</th>
+                  <th className="px-2 py-3 text-center font-semibold text-neutral-900">M</th>
+                  <th className="px-2 py-3 text-center font-semibold text-neutral-900">L</th>
+                  <th className="px-2 py-3 text-center font-semibold text-neutral-900">XL</th>
+                  <th className="px-2 py-3 text-center font-semibold text-neutral-900">
+                    Total Qty
+                  </th>
+                  <th className="px-3 py-3 text-right font-semibold text-neutral-900">
+                    Price/Unit
+                  </th>
+                  <th className="px-3 py-3 text-right font-semibold text-neutral-900">
+                    Total Value
+                  </th>
+                  <th className="px-3 py-3 text-right font-semibold text-neutral-900">MRP</th>
+                  <th className="px-3 py-3 text-left font-semibold text-neutral-900">Status</th>
+                </tr>
+              </thead>
+              <tbody>
                 {filteredInventory.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-neutral-50">
-                    <TableCell className="font-medium max-w-[200px]">
-                      <div className="text-sm">{item.quality}</div>
-                    </TableCell>
-                    <TableCell>{item.color}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="rounded-none text-xs">
+                  <tr
+                    key={item.id}
+                    className="border-b border-neutral-200 hover:bg-neutral-50/80 align-top"
+                  >
+                    <td className="px-3 py-3 text-sm leading-snug break-words whitespace-normal text-neutral-800">
+                      {item.quality}
+                    </td>
+                    <td className="px-3 py-3 font-medium whitespace-nowrap text-neutral-900">
+                      {item.color}
+                    </td>
+                    <td className="px-3 py-3">
+                      <Badge variant="outline" className="rounded-none text-[10px] whitespace-normal">
                         {item.category}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">{item.sizes.S}</TableCell>
-                    <TableCell className="text-center">{item.sizes.M}</TableCell>
-                    <TableCell className="text-center">{item.sizes.L}</TableCell>
-                    <TableCell className="text-center">{item.sizes.XL}</TableCell>
-                    <TableCell className="text-center font-medium">{item.quantity}</TableCell>
-                    <TableCell className="text-right">₹{item.pricePerUnit.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-medium">
+                    </td>
+                    <td className="px-2 py-3 text-center tabular-nums">{item.sizes.S}</td>
+                    <td className="px-2 py-3 text-center tabular-nums">{item.sizes.M}</td>
+                    <td className="px-2 py-3 text-center tabular-nums">{item.sizes.L}</td>
+                    <td className="px-2 py-3 text-center tabular-nums">{item.sizes.XL}</td>
+                    <td className="px-2 py-3 text-center font-semibold tabular-nums">
+                      {item.quantity}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums">
+                      ₹{item.pricePerUnit.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3 text-right font-medium tabular-nums">
                       ₹{item.totalPrice.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right text-neutral-500">
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums text-neutral-500">
                       ₹{item.mrp.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-3 py-3">
                       {item.quantity < 25 ? (
-                        <Badge variant="destructive" className="rounded-none">
+                        <Badge variant="destructive" className="rounded-none text-[10px]">
                           Low Stock
                         </Badge>
                       ) : (
-                        <Badge variant="default" className="rounded-none bg-green-600">
+                        <Badge className="rounded-none bg-green-600 text-[10px] hover:bg-green-600">
                           In Stock
                         </Badge>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+              <tfoot>
+                <tr className="bg-neutral-50 border-t border-neutral-300 font-semibold">
+                  <td colSpan={7} className="px-3 py-3 text-right text-neutral-700">
+                    Grand Total
+                  </td>
+                  <td className="px-2 py-3 text-center tabular-nums">{filteredTotalQty}</td>
+                  <td colSpan={4} />
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </CardContent>
       </Card>

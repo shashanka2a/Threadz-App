@@ -143,20 +143,30 @@ export function OrdersTable({ orders }: OrdersTableProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-200 rounded-none">
+      <Card className="border-neutral-200 rounded-none overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[960px] table-fixed">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10" />
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead className="text-center">Items</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Status</TableHead>
+                <TableRow className="bg-amber-50 hover:bg-amber-50 border-b border-neutral-300">
+                  <TableHead className="w-10 bg-amber-50 font-semibold text-neutral-900" />
+                  <TableHead className="bg-amber-50 font-semibold text-neutral-900">
+                    Order ID
+                  </TableHead>
+                  <TableHead className="bg-amber-50 font-semibold text-neutral-900">
+                    Customer
+                  </TableHead>
+                  <TableHead className="bg-amber-50 font-semibold text-neutral-900">Date</TableHead>
+                  <TableHead className="bg-amber-50 font-semibold text-neutral-900">
+                    Payment
+                  </TableHead>
+                  <TableHead className="bg-amber-50 text-center font-semibold text-neutral-900">
+                    Items
+                  </TableHead>
+                  <TableHead className="bg-amber-50 text-right font-semibold text-neutral-900">
+                    Total
+                  </TableHead>
+                  <TableHead className="bg-amber-50 font-semibold text-neutral-900">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -166,8 +176,8 @@ export function OrdersTable({ orders }: OrdersTableProps) {
 
                   return (
                     <Fragment key={order.id}>
-                      <TableRow className="hover:bg-neutral-50">
-                        <TableCell>
+                      <TableRow className="hover:bg-neutral-50/80 align-top">
+                        <TableCell className="align-top">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -183,12 +193,14 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                             )}
                           </Button>
                         </TableCell>
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">{order.fullName}</div>
-                          <div className="text-xs text-neutral-500">{order.email}</div>
+                        <TableCell className="font-medium align-top whitespace-nowrap">
+                          {order.id}
                         </TableCell>
-                        <TableCell className="text-sm whitespace-nowrap">
+                        <TableCell className="align-top">
+                          <div className="text-sm leading-snug">{order.fullName}</div>
+                          <div className="text-xs text-neutral-500 break-all">{order.email}</div>
+                        </TableCell>
+                        <TableCell className="text-sm whitespace-nowrap align-top tabular-nums">
                           {formatDate(order.createdAt)}
                         </TableCell>
                         <TableCell>
@@ -196,8 +208,12 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                             {order.paymentMethod}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center">{itemCount}</TableCell>
-                        <TableCell className="text-right font-medium">₹{order.total}</TableCell>
+                        <TableCell className="text-center align-top tabular-nums">
+                          {itemCount}
+                        </TableCell>
+                        <TableCell className="text-right font-medium align-top tabular-nums">
+                          ₹{order.total}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             className={`rounded-none ${
@@ -232,27 +248,51 @@ export function OrdersTable({ orders }: OrdersTableProps) {
 
                               <div>
                                 <p className="font-medium mb-2 text-sm">Line items</p>
-                                <div className="border border-neutral-200">
-                                  <Table>
+                                <div className="border border-neutral-200 overflow-hidden">
+                                  <Table className="table-fixed">
                                     <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Product</TableHead>
-                                        <TableHead>Color</TableHead>
-                                        <TableHead>Size</TableHead>
-                                        <TableHead className="text-center">Qty</TableHead>
-                                        <TableHead className="text-right">Unit</TableHead>
-                                        <TableHead className="text-right">Line total</TableHead>
+                                      <TableRow className="bg-amber-50 hover:bg-amber-50">
+                                        <TableHead className="bg-amber-50 font-semibold">
+                                          Product
+                                        </TableHead>
+                                        <TableHead className="bg-amber-50 font-semibold">
+                                          Color
+                                        </TableHead>
+                                        <TableHead className="bg-amber-50 font-semibold">
+                                          Size
+                                        </TableHead>
+                                        <TableHead className="bg-amber-50 text-center font-semibold">
+                                          Qty
+                                        </TableHead>
+                                        <TableHead className="bg-amber-50 text-right font-semibold">
+                                          Unit
+                                        </TableHead>
+                                        <TableHead className="bg-amber-50 text-right font-semibold">
+                                          Line total
+                                        </TableHead>
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                       {order.items.map((item) => (
                                         <TableRow key={item.id}>
-                                          <TableCell>{item.productName}</TableCell>
-                                          <TableCell>{item.color}</TableCell>
-                                          <TableCell>{item.size}</TableCell>
-                                          <TableCell className="text-center">{item.quantity}</TableCell>
-                                          <TableCell className="text-right">₹{item.unitPrice}</TableCell>
-                                          <TableCell className="text-right">₹{item.lineTotal}</TableCell>
+                                          <TableCell className="whitespace-normal break-words align-top text-sm">
+                                            {item.productName}
+                                          </TableCell>
+                                          <TableCell className="whitespace-nowrap align-top">
+                                            {item.color}
+                                          </TableCell>
+                                          <TableCell className="align-top tabular-nums">
+                                            {item.size}
+                                          </TableCell>
+                                          <TableCell className="text-center align-top tabular-nums">
+                                            {item.quantity}
+                                          </TableCell>
+                                          <TableCell className="text-right align-top tabular-nums">
+                                            ₹{item.unitPrice}
+                                          </TableCell>
+                                          <TableCell className="text-right align-top tabular-nums">
+                                            ₹{item.lineTotal}
+                                          </TableCell>
                                         </TableRow>
                                       ))}
                                     </TableBody>
