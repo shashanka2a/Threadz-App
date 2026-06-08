@@ -24,6 +24,7 @@ import {
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { inventoryData } from "@/data/inventory";
 import { Package, AlertTriangle, TrendingUp, Search, Download, BarChart3, FolderOpen } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { ProductManagement } from "@/components/admin/ProductManagement";
 import { CategoryManagement } from "@/components/admin/CategoryManagement";
 import { InventoryOverview } from "@/components/admin/InventoryOverview";
@@ -53,6 +54,8 @@ export default function InventoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <AdminNav />
+
       <div className="mb-8">
         <h1 className="text-4xl font-serif mb-2">Inventory Management</h1>
         <p className="text-neutral-600">Manage products, categories, and track inventory</p>

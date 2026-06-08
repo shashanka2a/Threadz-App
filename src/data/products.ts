@@ -65,7 +65,7 @@ function buildName(color: string, category: string): string {
     : `${color} Plain Tee`;
 }
 
-export const products: Product[] = inventoryData.map((item) => ({
+export const staticProducts: Product[] = inventoryData.map((item) => ({
   id: item.id,
   name: buildName(item.color, item.category),
   description: buildDescription(item.quality, item.color, item.category),
@@ -81,16 +81,19 @@ export const products: Product[] = inventoryData.map((item) => ({
   sizeStock: item.sizes,
 }));
 
+/** Static catalog fallback when Supabase is unavailable or empty. */
+export const products = staticProducts;
+
 export const categories = [...SHOP_CATEGORIES];
 
-export const colors = products.map((p) => p.color);
+export const colors = staticProducts.map((p) => p.color);
 
 export function getProductsByQuality(quality: string): Product[] {
-  return products.filter((p) => p.quality === quality);
+  return staticProducts.filter((p) => p.quality === quality);
 }
 
 export function getProductsByCategory(category: string): Product[] {
-  return products.filter((p) => p.category === category);
+  return staticProducts.filter((p) => p.category === category);
 }
 
 export function getStockStatus(count: number): "in-stock" | "low-stock" | "out-of-stock" {

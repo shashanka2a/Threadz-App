@@ -34,7 +34,6 @@ const NAV_LINKS = [
     label: "Oversized T-Shirts",
   },
   { href: "/ai-studio", label: "AI Studio" },
-  { href: "/inventory", label: "Inventory" },
 ];
 
 function Logo({ compact = false }: { compact?: boolean }) {

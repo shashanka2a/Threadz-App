@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { products, categories, colors } from "@/data/products";
+import type { Product } from "@/types/product";
+import { categories as shopCategories } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +17,17 @@ import {
 } from "@/components/ui/select";
 import { ProductImage } from "@/components/product-image";
 
-export default function ShopContent() {
+type ShopContentProps = {
+  products: Product[];
+};
+
+export default function ShopContent({ products }: ShopContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
+
+  const colors = [...new Set(products.map((p) => p.color))];
+  const categories = shopCategories;
 
   const [selectedCategory, setSelectedCategory] = useState(
     categoryParam || "All Products"

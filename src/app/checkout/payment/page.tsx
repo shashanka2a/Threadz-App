@@ -27,7 +27,7 @@ function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["ship
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { cartItems, shippingAddress, clearCart, clearShippingAddress } = useCart();
+  const { cartItems, cartTotal, shippingAddress, clearCart, clearShippingAddress } = useCart();
   const [isChecking, setIsChecking] = useState(true);
   const [method, setMethod] = useState<PaymentMethod>("upi");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -49,18 +49,43 @@ export default function PaymentPage() {
     return `TZ-${now.slice(-8)}`;
   }, []);
 
+  const tax = useMemo(() => Math.round(cartTotal * 0.18), [cartTotal]);
+  const total = cartTotal + tax;
+
   const placeOrder = async () => {
     if (!shippingAddress) return;
 
     setIsPlacingOrder(true);
     try {
-      await new Promise((r) => setTimeout(r, 1500));
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          shippingAddress,
+          paymentMethod: method,
+          cartItems,
+          subtotal: cartTotal,
+          tax,
+          total,
+        }),
+      });
+
+      const data = (await response.json()) as { error?: string; orderId?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to place order");
+      }
+
       toast.success("Payment accepted. Order placed!");
       clearCart();
       clearShippingAddress();
-      router.push(`/checkout/success?orderId=${encodeURIComponent(orderId)}`);
-    } catch {
-      toast.error("Payment failed. Please try again.");
+      router.push(
+        `/checkout/success?orderId=${encodeURIComponent(data.orderId ?? orderId)}`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Payment failed. Please try again.";
+      toast.error(message);
       setIsPlacingOrder(false);
     }
   };
