@@ -104,11 +104,6 @@ export default function ProductDetailContent({
                     Oversized Fit
                   </Badge>
                 )}
-                {product.quantity < 25 && (
-                  <Badge variant="destructive" className="rounded-none text-xs">
-                    Low Stock
-                  </Badge>
-                )}
               </div>
               <h1 className="text-3xl font-serif">{product.name}</h1>
               <p className="text-sm text-neutral-600 mt-2">{product.description}</p>
@@ -123,8 +118,7 @@ export default function ProductDetailContent({
             <span className="text-lg text-neutral-500 line-through">MRP: ₹{product.mrp}</span>
             <span className="text-sm text-green-600">{discount}% OFF</span>
           </div>
-          <p className="text-sm text-neutral-600 mb-1">inclusive of all taxes</p>
-          <p className="text-sm text-neutral-500 mb-4">{product.quantity} units in stock</p>
+          <p className="text-sm text-neutral-600 mb-4">inclusive of all taxes</p>
 
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center gap-1">
@@ -197,7 +191,7 @@ export default function ProductDetailContent({
                     variant={selectedSize === size ? "default" : "outline"}
                     disabled={disabled}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-[72px] rounded-none flex flex-col h-auto py-2 ${
+                    className={`min-w-[56px] rounded-none h-10 ${
                       selectedSize === size
                         ? "bg-black text-white border-black"
                         : disabled
@@ -205,10 +199,7 @@ export default function ProductDetailContent({
                           : "border-neutral-300 hover:border-black"
                     }`}
                   >
-                    <span>{size}</span>
-                    <span className="text-[10px] font-normal opacity-80">
-                      {stock > 0 ? `${stock} left` : "Out"}
-                    </span>
+                    {size}
                   </Button>
                 );
               })}
@@ -281,13 +272,6 @@ export default function ProductDetailContent({
                 <div className="flex justify-between gap-4">
                   <span>Fit</span>
                   <span className="text-right">{isOversized ? "Oversized" : "Regular"}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Size Stock</span>
-                  <span className="text-right">
-                    S:{product.sizeStock.S} M:{product.sizeStock.M} L:{product.sizeStock.L} XL:
-                    {product.sizeStock.XL}
-                  </span>
                 </div>
               </div>
             </CardContent>
