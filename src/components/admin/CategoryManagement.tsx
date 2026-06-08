@@ -6,14 +6,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,38 +25,20 @@ import {
 } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
-import { PRODUCT_CATEGORIES, CATEGORY_DESCRIPTIONS } from "../../data/categories";
-import { products as initialProducts } from "../../data/products";
+import type { AdminCategory } from "@/lib/db/categories";
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  productCount: number;
-}
+type CategoryManagementProps = {
+  categories: AdminCategory[];
+  onRefresh: () => Promise<void>;
+};
 
-export function CategoryManagement() {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "1",
-      name: PRODUCT_CATEGORIES.PLAIN,
-      description: CATEGORY_DESCRIPTIONS[PRODUCT_CATEGORIES.PLAIN],
-      productCount: initialProducts.filter((p) => p.category === PRODUCT_CATEGORIES.PLAIN).length,
-    },
-    {
-      id: "2",
-      name: PRODUCT_CATEGORIES.OVERSIZED,
-      description: CATEGORY_DESCRIPTIONS[PRODUCT_CATEGORIES.OVERSIZED],
-      productCount: initialProducts.filter((p) => p.category === PRODUCT_CATEGORIES.OVERSIZED).length,
-    },
-  ]);
-
+export function CategoryManagement({ categories, onRefresh }: CategoryManagementProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<AdminCategory | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -72,13 +46,15 @@ export function CategoryManagement() {
   });
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-    });
+    setFormData({ name: "", description: "" });
   };
 
-  const handleEdit = (category: Category) => {
+  const openAddDialog = () => {
+    resetForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const handleEdit = (category: AdminCategory) => {
     setCurrentCategory(category);
     setFormData({
       name: category.name,
@@ -87,26 +63,37 @@ export function CategoryManagement() {
     setIsEditDialogOpen(true);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formData.name) {
       toast.error("Please enter a category name");
       return;
     }
 
-    const newCategory: Category = {
-      id: (categories.length + 1).toString(),
-      name: formData.name,
-      description: formData.description,
-      productCount: 0,
-    };
+    try {
+      const response = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+        }),
+      });
+      const data = (await response.json()) as { error?: string };
 
-    setCategories([...categories, newCategory]);
-    toast.success("Category added successfully");
-    setIsAddDialogOpen(false);
-    resetForm();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to add category");
+      }
+
+      await onRefresh();
+      toast.success("Category added successfully");
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add category");
+    }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!currentCategory) return;
 
     if (!formData.name) {
@@ -114,191 +101,266 @@ export function CategoryManagement() {
       return;
     }
 
-    const updatedCategories = categories.map((c) =>
-      c.id === currentCategory.id
-        ? {
-            ...c,
-            name: formData.name,
-            description: formData.description,
-          }
-        : c
-    );
+    try {
+      const response = await fetch(`/api/admin/categories/${currentCategory.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+        }),
+      });
+      const data = (await response.json()) as { error?: string };
 
-    setCategories(updatedCategories);
-    toast.success("Category updated successfully");
-    setIsEditDialogOpen(false);
-    setCurrentCategory(null);
-    resetForm();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to update category");
+      }
+
+      await onRefresh();
+      toast.success("Category updated successfully");
+      setIsEditDialogOpen(false);
+      setCurrentCategory(null);
+      resetForm();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update category");
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const category = categories.find((c) => c.id === id);
 
     if (category && category.productCount > 0) {
-      toast.error(`Cannot delete category with ${category.productCount} products. Please reassign or delete products first.`);
+      toast.error(
+        `Cannot delete category with ${category.productCount} products. Please reassign or delete products first.`,
+      );
       setDeleteCategoryId(null);
       return;
     }
 
-    setCategories(categories.filter((c) => c.id !== id));
-    toast.success("Category deleted successfully");
-    setDeleteCategoryId(null);
+    try {
+      const response = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to delete category");
+      }
+
+      await onRefresh();
+      toast.success("Category deleted successfully");
+      setDeleteCategoryId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete category");
+    }
   };
 
   const CategoryForm = () => (
-    <div className="grid gap-4 py-4">
-      <div>
-        <Label htmlFor="categoryName">Category Name *</Label>
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <Label htmlFor="categoryName" className="text-sm font-medium">
+          Category Name <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="categoryName"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="e.g., Hoodies"
-          className="rounded-none"
+          className="rounded-none border-neutral-300 h-10"
         />
       </div>
 
-      <div>
-        <Label htmlFor="categoryDescription">Description</Label>
+      <div className="space-y-2">
+        <Label htmlFor="categoryDescription" className="text-sm font-medium">
+          Description
+        </Label>
         <Textarea
           id="categoryDescription"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Brief description of this category..."
-          className="rounded-none"
+          className="rounded-none border-neutral-300 min-h-[88px] resize-none"
           rows={3}
         />
       </div>
     </div>
   );
 
+  const CategoryDialog = ({
+    open,
+    onOpenChange,
+    title,
+    description,
+    submitLabel,
+    onSubmit,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    description: string;
+    submitLabel: string;
+    onSubmit: () => void;
+  }) => (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md gap-0 p-0 rounded-none border-neutral-200 overflow-hidden">
+        <div className="px-6 pt-6 pb-5 border-b border-neutral-100">
+          <DialogHeader className="space-y-1.5 text-left">
+            <DialogTitle className="text-xl font-serif font-normal">{title}</DialogTitle>
+            <DialogDescription className="text-neutral-600">{description}</DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <div className="px-6 py-5">
+          <CategoryForm />
+        </div>
+
+        <DialogFooter className="px-6 py-4 bg-neutral-50 border-t border-neutral-100 gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-none border-neutral-300 min-w-[96px]"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onSubmit}
+            className="bg-black text-white hover:bg-neutral-800 rounded-none min-w-[120px]"
+          >
+            {submitLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
-    <div>
-      <Card className="border-neutral-200 rounded-none mb-6">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium mb-1">Product Categories</h3>
-              <p className="text-sm text-neutral-600">Manage product categories and classifications</p>
+    <div className="space-y-5">
+      <Card className="border-neutral-200 rounded-none shadow-none">
+        <CardContent className="px-5 py-4 sm:px-6 sm:py-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center bg-neutral-100">
+                <FolderOpen className="h-5 w-5 text-neutral-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium leading-tight">Product Categories</h3>
+                <p className="text-sm text-neutral-600 mt-1">
+                  Manage product categories and classifications
+                </p>
+              </div>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <Button
-                className="bg-black text-white hover:bg-neutral-800 rounded-none"
-                onClick={() => {
-                  resetForm();
-                  setIsAddDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
-              <DialogContent className="max-w-lg rounded-none">
-                <DialogHeader>
-                  <DialogTitle>Add New Category</DialogTitle>
-                  <DialogDescription>
-                    Create a new product category
-                  </DialogDescription>
-                </DialogHeader>
-                <CategoryForm />
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-none">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAdd} className="bg-black text-white hover:bg-neutral-800 rounded-none">
-                    Add Category
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              className="bg-black text-white hover:bg-neutral-800 rounded-none shrink-0 w-full sm:w-auto"
+              onClick={openAddDialog}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-200 rounded-none">
+      <Card className="border-neutral-200 rounded-none shadow-none overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Category Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-center">Products</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="text-neutral-600">{category.description}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="rounded-none">
-                      {category.productCount} {category.productCount === 1 ? 'product' : 'products'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(category)}
-                        className="h-8 w-8"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteCategoryId(category.id)}
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        disabled={category.productCount > 0}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[28%]" />
+                <col className="w-[44%]" />
+                <col className="w-[14%]" />
+                <col className="w-[14%]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-neutral-300 bg-amber-50">
+                  <th className="px-4 py-3 text-left font-semibold text-neutral-900">
+                    Category Name
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-neutral-900">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-neutral-900">Products</th>
+                  <th className="px-4 py-3 text-center font-semibold text-neutral-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr
+                    key={category.id}
+                    className="border-b border-neutral-200 hover:bg-neutral-50/80 align-top"
+                  >
+                    <td className="px-4 py-3.5 font-medium text-neutral-900">{category.name}</td>
+                    <td className="px-4 py-3.5 text-neutral-600 leading-snug">
+                      <p className="line-clamp-2 break-words whitespace-normal">
+                        {category.description || "—"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3.5 text-center">
+                      <Badge variant="outline" className="rounded-none text-[11px] font-normal">
+                        {category.productCount}{" "}
+                        {category.productCount === 1 ? "product" : "products"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(category)}
+                          className="h-8 w-8 rounded-none hover:bg-neutral-100"
+                          aria-label={`Edit ${category.name}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteCategoryId(category.id)}
+                          className="h-8 w-8 rounded-none text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-40"
+                          disabled={category.productCount > 0}
+                          aria-label={`Delete ${category.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg rounded-none">
-          <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>
-              Update the category details
-            </DialogDescription>
-          </DialogHeader>
-          <CategoryForm />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="rounded-none">
-              Cancel
-            </Button>
-            <Button onClick={handleUpdate} className="bg-black text-white hover:bg-neutral-800 rounded-none">
-              Update Category
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CategoryDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        title="Add New Category"
+        description="Create a new product category"
+        submitLabel="Add Category"
+        onSubmit={handleAdd}
+      />
 
-      {/* Delete Confirmation */}
+      <CategoryDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        title="Edit Category"
+        description="Update the category details"
+        submitLabel="Save Changes"
+        onSubmit={handleUpdate}
+      />
+
       <AlertDialog open={!!deleteCategoryId} onOpenChange={() => setDeleteCategoryId(null)}>
-        <AlertDialogContent className="rounded-none">
+        <AlertDialogContent className="rounded-none max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete category?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the category.
-              {categories.find(c => c.id === deleteCategoryId)?.productCount! > 0 && (
+              {(categories.find((c) => c.id === deleteCategoryId)?.productCount ?? 0) > 0 && (
                 <span className="block mt-2 text-red-600 font-medium">
                   Warning: This category contains products and cannot be deleted.
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-3">
             <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteCategoryId && handleDelete(deleteCategoryId)}
@@ -310,9 +372,9 @@ export function CategoryManagement() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="mt-6 text-sm text-neutral-600">
-        Total categories: {categories.length}
-      </div>
+      <p className="text-sm text-neutral-500 pt-1">
+        Total categories: <span className="font-medium text-neutral-700">{categories.length}</span>
+      </p>
     </div>
   );
 }

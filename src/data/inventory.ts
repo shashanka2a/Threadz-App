@@ -1,21 +1,7 @@
 import { getCategoryFromQuality, getRetailPrice } from "./categories";
 
-export interface InventoryItem {
-  id: string;
-  quality: string;
-  color: string;
-  category: string;
-  sizes: {
-    S: number;
-    M: number;
-    L: number;
-    XL: number;
-  };
-  quantity: number;
-  pricePerUnit: number;
-  totalPrice: number;
-  mrp: number;
-}
+export type { InventoryItem } from "@/types/inventory";
+import type { InventoryItem } from "@/types/inventory";
 
 type InventorySeed = Omit<InventoryItem, "pricePerUnit" | "totalPrice" | "category"> & {
   category?: string;

@@ -40,12 +40,14 @@ export default function OrdersPage() {
   }, [loadOrders]);
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 sm:py-10 max-w-7xl">
       <AdminNav />
 
-      <div className="mb-8">
-        <h1 className="text-4xl font-serif mb-2">Order Management</h1>
-        <p className="text-neutral-600">View and track customer orders from Supabase</p>
+      <div className="mb-6">
+        <h1 className="text-3xl sm:text-4xl font-serif mb-1.5">Order Management</h1>
+        <p className="text-sm sm:text-base text-neutral-600">
+          View and track customer orders
+        </p>
       </div>
 
       {isLoading ? (
@@ -65,15 +67,21 @@ export default function OrdersPage() {
           </button>
         </div>
       ) : (
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8 rounded-none">
-            <TabsTrigger value="overview">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Overview
+        <Tabs defaultValue="overview" className="w-full space-y-6">
+          <TabsList className="grid w-full h-auto grid-cols-2 gap-1 p-1 mb-0 rounded-none bg-neutral-100 border border-neutral-200">
+            <TabsTrigger
+              value="overview"
+              className="rounded-none py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <BarChart3 className="h-4 w-4 mr-1.5 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="orders">
-              <ListOrdered className="h-4 w-4 mr-2" />
-              All Orders
+            <TabsTrigger
+              value="orders"
+              className="rounded-none py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <ListOrdered className="h-4 w-4 mr-1.5 sm:mr-2" />
+              <span className="text-xs sm:text-sm">All Orders</span>
             </TabsTrigger>
           </TabsList>
 

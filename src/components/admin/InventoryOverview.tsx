@@ -3,12 +3,16 @@
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Package, AlertTriangle, TrendingUp, ShoppingBag, DollarSign, Layers } from "lucide-react";
-import { products } from "../../data/products";
-import { getInventoryStats } from "../../data/inventory";
 import { PRODUCT_CATEGORIES } from "../../data/categories";
+import type { Product } from "@/types/product";
+import type { InventoryStats } from "@/types/inventory";
 
-export function InventoryOverview() {
-  const stats = getInventoryStats();
+type InventoryOverviewProps = {
+  products: Product[];
+  stats: InventoryStats;
+};
+
+export function InventoryOverview({ products, stats }: InventoryOverviewProps) {
   const { totalQuantity, totalInventoryValue, lowStockItems, lowStockCount, categoryStats, avgPrice } =
     stats;
 

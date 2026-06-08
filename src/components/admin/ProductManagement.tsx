@@ -43,13 +43,20 @@ import {
 } from "../ui/select";
 import { Plus, Edit, Trash2, Search, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Product } from "../../types/product";
-import { products as initialProducts, categories as initialCategories } from "../../data/products";
 import { QUALITY_OPTIONS, getRetailPrice } from "../../data/categories";
 import { toast } from "sonner";
 
-export function ProductManagement() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories] = useState<string[]>(initialCategories.filter(c => c !== "All Products"));
+type ProductManagementProps = {
+  products: Product[];
+  categories: string[];
+  onRefresh: () => Promise<void>;
+};
+
+export function ProductManagement({
+  products,
+  categories,
+  onRefresh,
+}: ProductManagementProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -123,10 +130,10 @@ export function ProductManagement() {
       image: product.image,
       category: product.category,
       gsm: product.gsm,
-      sizeS: "6",
-      sizeM: "6",
-      sizeL: "6",
-      sizeXL: "6",
+      sizeS: product.sizeStock.S.toString(),
+      sizeM: product.sizeStock.M.toString(),
+      sizeL: product.sizeStock.L.toString(),
+      sizeXL: product.sizeStock.XL.toString(),
     });
     setImagePreview(product.image);
     setIsEditDialogOpen(true);
@@ -139,37 +146,53 @@ export function ProductManagement() {
     XL: parseInt(formData.sizeXL || "0"),
   });
 
-  const handleAdd = () => {
-    if (!formData.name || !formData.category || !formData.price) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
+  const buildProductPayload = (): Omit<Product, "id" | "sizes"> => {
     const sizeStock = buildSizeStock();
-
-    const newProduct: Product = {
-      id: (products.length + 1).toString(),
+    return {
       name: formData.name,
       description: formData.description,
       quality: formData.quality,
       color: formData.color,
       price: parseFloat(formData.price),
-      mrp: parseFloat(formData.mrp),
-      image: formData.image || "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
+      mrp: parseFloat(formData.mrp || formData.price),
+      image:
+        formData.image ||
+        "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
       category: formData.category as Product["category"],
       gsm: formData.gsm,
-      sizes: ["S", "M", "L", "XL"],
       quantity: sizeStock.S + sizeStock.M + sizeStock.L + sizeStock.XL,
       sizeStock,
     };
-
-    setProducts([...products, newProduct]);
-    toast.success("Product added successfully");
-    setIsAddDialogOpen(false);
-    resetForm();
   };
 
-  const handleUpdate = () => {
+  const handleAdd = async () => {
+    if (!formData.name || !formData.category || !formData.price) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildProductPayload()),
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to add product");
+      }
+
+      await onRefresh();
+      toast.success("Product added successfully");
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add product");
+    }
+  };
+
+  const handleUpdate = async () => {
     if (!currentProduct) return;
 
     if (!formData.name || !formData.category || !formData.price) {
@@ -177,38 +200,43 @@ export function ProductManagement() {
       return;
     }
 
-    const sizeStock = buildSizeStock();
+    try {
+      const response = await fetch(`/api/admin/products/${currentProduct.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildProductPayload()),
+      });
+      const data = (await response.json()) as { error?: string };
 
-    const updatedProducts = products.map((p) =>
-      p.id === currentProduct.id
-        ? {
-            ...p,
-            name: formData.name,
-            description: formData.description,
-            quality: formData.quality,
-            color: formData.color,
-            price: parseFloat(formData.price),
-            mrp: parseFloat(formData.mrp),
-            image: formData.image,
-            category: formData.category as Product["category"],
-            gsm: formData.gsm,
-            quantity: sizeStock.S + sizeStock.M + sizeStock.L + sizeStock.XL,
-            sizeStock,
-          }
-        : p
-    );
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to update product");
+      }
 
-    setProducts(updatedProducts);
-    toast.success("Product updated successfully");
-    setIsEditDialogOpen(false);
-    setCurrentProduct(null);
-    resetForm();
+      await onRefresh();
+      toast.success("Product updated successfully");
+      setIsEditDialogOpen(false);
+      setCurrentProduct(null);
+      resetForm();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update product");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setProducts(products.filter((p) => p.id !== id));
-    toast.success("Product deleted successfully");
-    setDeleteProductId(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to delete product");
+      }
+
+      await onRefresh();
+      toast.success("Product removed successfully");
+      setDeleteProductId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete product");
+    }
   };
 
   const filteredProducts = products.filter((product) =>

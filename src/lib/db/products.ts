@@ -9,23 +9,18 @@ export async function getProducts(): Promise<Product[]> {
     return staticProducts;
   }
 
-  try {
-    const supabase = createPublicClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("id", { ascending: true });
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("id", { ascending: true });
 
-    if (error || !data?.length) {
-      console.warn("[getProducts] Supabase fallback:", error?.message ?? "empty table");
-      return staticProducts;
-    }
-
-    return data.map(mapProductRow);
-  } catch (error) {
-    console.warn("[getProducts] Supabase error, using static data:", error);
-    return staticProducts;
+  if (error) {
+    console.error("[getProducts]", error.message);
+    return [];
   }
+
+  return (data ?? []).map(mapProductRow);
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
