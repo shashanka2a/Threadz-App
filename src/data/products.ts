@@ -21,6 +21,18 @@ const PRODUCT_IMAGES = {
   "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/steelGrey.png",
   wildGinger:
   "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/wildGinger.png",
+  // need to update the below pics
+  brown: 
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/brown.png",
+  parkPetrol:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/parkPetrol.png",
+  ltGreen:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/LTGreen.png",
+  plum:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/plum.png",
+  ptBlue:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/PTBlue.png",
+
 } as const;
 
 const images: Record<string, string> = {
@@ -33,16 +45,11 @@ const images: Record<string, string> = {
   "Wild Ginger": PRODUCT_IMAGES.wildGinger,
   "Moss Green": PRODUCT_IMAGES.mossGreen,
   "Pink": PRODUCT_IMAGES.pink,
-  "Brown":
-    "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Park Petrol":
-    "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "LT Green":
-    "https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Plum":
-    "https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "P.T Blue":
-    "https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  "Brown": PRODUCT_IMAGES.brown,
+  "Park Petrol": PRODUCT_IMAGES.parkPetrol,
+  "LT Green": PRODUCT_IMAGES.ltGreen,
+  "Plum": PRODUCT_IMAGES.plum,
+  "P.T Blue": PRODUCT_IMAGES.ptBlue
 };
 
 function extractGsm(quality: string): string {
