@@ -7,35 +7,42 @@ const PRODUCT_IMAGES = {
     "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/charcoal.png",
   grey:
     "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/grey.png",
+  cream:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/cream.png",
+  pink:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/pink.png",
+  burgandry: 
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/Burgandry.png",
+  dustyRose:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/dustyRose.png",
+  mossGreen:
+    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/mossGreen.png",
+  steelGrey:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/steelGrey.png",
+  wildGinger:
+  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/wildGinger.png",
 } as const;
 
 const images: Record<string, string> = {
   "Charcoal Melange": PRODUCT_IMAGES.charcoal,
   "Grey Melange": PRODUCT_IMAGES.grey,
-  Cream:
+  "Cream":  PRODUCT_IMAGES.cream,
+  "Burgundy": PRODUCT_IMAGES.burgandry,
+  "Dusty Rose": PRODUCT_IMAGES.dustyRose,
+  "Steel Grey": PRODUCT_IMAGES.steelGrey,
+  "Wild Ginger": PRODUCT_IMAGES.wildGinger,
+  "Moss Green": PRODUCT_IMAGES.mossGreen,
+  "Pink": PRODUCT_IMAGES.pink,
+  "Brown":
     "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  "Park Petrol":
+    "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   "LT Green":
     "https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  Plum:
+  "Plum":
     "https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   "P.T Blue":
     "https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  Burgundy:
-    "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Dusty Rose":
-    "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  Brown:
-    "https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Steel Grey":
-    "https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Wild Ginger":
-    "https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Moss Green":
-    "https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  "Park Petrol":
-    "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  Pink:
-    "https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
 };
 
 function extractGsm(quality: string): string {
