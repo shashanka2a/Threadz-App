@@ -57,32 +57,139 @@ export default function PaymentPage() {
 
     setIsPlacingOrder(true);
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          shippingAddress,
-          paymentMethod: method,
-          cartItems,
-          subtotal: cartTotal,
-          tax,
-          total,
-        }),
-      });
+      // For Cash on Delivery, continue with existing order flow
+      if (method === "cod") {
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            shippingAddress,
+            paymentMethod: method,
+            cartItems,
+            subtotal: cartTotal,
+            tax,
+            total,
+          }),
+        });
 
-      const data = (await response.json()) as { error?: string; orderId?: string };
+        const data = (await response.json()) as { error?: string; orderId?: string };
 
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to place order");
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to place order");
+        }
+
+        toast.success("Order placed! Payment on delivery.");
+        clearCart();
+        clearShippingAddress();
+        router.push(`/checkout/success?orderId=${encodeURIComponent(data.orderId ?? orderId)}`);
+        return;
       }
 
-      toast.success("Payment accepted. Order placed!");
-      clearCart();
-      clearShippingAddress();
-      router.push(
-        `/checkout/success?orderId=${encodeURIComponent(data.orderId ?? orderId)}`
-      );
+      // For online payments (UPI / Card) create Razorpay order on the Next.js server
+      const createRes = await fetch("/api/checkout/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: total, currency: "INR", receipt: orderId }),
+      });
+
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to create payment order");
+      }
+
+      const order = (await createRes.json()) as any;
+
+      // Load Razorpay checkout script
+      const loadRazorpay = () =>
+        new Promise<boolean>((resolve) => {
+          if (typeof window === "undefined") return resolve(false);
+          if ((window as any).Razorpay) return resolve(true);
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+      const ok = await loadRazorpay();
+      if (!ok) throw new Error("Failed to load Razorpay SDK");
+
+      // Public test key (matches server). Replace with env var in production.
+      const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;;
+
+      const options = {
+        key: RAZORPAY_KEY,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Threadz",
+        description: `Order ${order.receipt ?? order.id}`,
+        order_id: order.id,
+        modal: {
+          ondismiss: () => {
+            toast.error("Payment cancelled. Please try again.");
+            setIsPlacingOrder(false);
+          },
+        },
+        handler: async (response: any) => {
+          try {
+            const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json().catch(() => ({}));
+
+            if (!verifyRes.ok || verifyData.status !== "success") {
+              throw new Error(verifyData.message ?? "Payment verification failed");
+            }
+
+            const orderResponse = await fetch("/api/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId,
+                shippingAddress,
+                paymentMethod: method,
+                cartItems,
+                subtotal: cartTotal,
+                tax,
+                total,
+              }),
+            });
+
+            const orderData = (await orderResponse.json()) as { error?: string; orderId?: string };
+            if (!orderResponse.ok) {
+              throw new Error(orderData.error ?? "Failed to save order");
+            }
+
+            toast.success("Payment successful. Order placed!");
+            clearCart();
+            clearShippingAddress();
+            router.push(
+              `/checkout/success?orderId=${encodeURIComponent(orderData.orderId ?? orderId)}`
+            );
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : "Payment verification failed";
+            toast.error(msg);
+            setIsPlacingOrder(false);
+          }
+        },
+        prefill: {
+          name: shippingAddress.fullName,
+          email: shippingAddress.email,
+          contact: shippingAddress.phone,
+        },
+        theme: { color: "#000000" },
+      } as any;
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Payment failed. Please try again.";
       toast.error(message);
