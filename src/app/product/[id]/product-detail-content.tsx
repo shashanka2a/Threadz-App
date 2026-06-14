@@ -12,7 +12,6 @@ import {
   ChevronLeft,
   Heart,
   Share2,
-  Star,
   Truck,
   RotateCcw,
   Banknote,
@@ -20,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { ProductImage } from "@/components/product-image";
+import { ProductRating } from "@/components/product-rating";
 import { KeyHighlights } from "@/components/product/key-highlights";
 import type { Product } from "@/types/product";
 
@@ -121,14 +121,7 @@ export default function ProductDetailContent({
           </div>
           <p className="text-sm text-neutral-600 mb-4">inclusive of all taxes</p>
 
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4].map((star) => (
-                <Star key={star} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-              ))}
-              <Star className="w-4 h-4 text-neutral-300" />
-            </div>
-          </div>
+          <ProductRating size="md" className="mb-2" />
 
           <p className="text-sm text-red-600 mb-6">Lowest price in last 30 days</p>
 

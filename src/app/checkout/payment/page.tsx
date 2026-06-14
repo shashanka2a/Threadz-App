@@ -8,12 +8,8 @@ import { CheckoutProgress } from "@/components/checkout/checkout-progress";
 import { CheckoutLoadingOverlay } from "@/components/checkout/checkout-loading-overlay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, CreditCard, Landmark, Loader2, Wallet } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-
-type PaymentMethod = "upi" | "card" | "cod";
 
 function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["shippingAddress"]>) {
   const parts = [
@@ -29,7 +25,6 @@ export default function PaymentPage() {
   const router = useRouter();
   const { cartItems, cartTotal, shippingAddress, clearCart, clearShippingAddress } = useCart();
   const [isChecking, setIsChecking] = useState(true);
-  const [method, setMethod] = useState<PaymentMethod>("upi");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
@@ -52,41 +47,11 @@ export default function PaymentPage() {
   const tax = useMemo(() => Math.round(cartTotal * 0.18), [cartTotal]);
   const total = cartTotal + tax;
 
-  const placeOrder = async () => {
+  const payAndProceed = async () => {
     if (!shippingAddress) return;
 
     setIsPlacingOrder(true);
     try {
-      // For Cash on Delivery, continue with existing order flow
-      if (method === "cod") {
-        const response = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            shippingAddress,
-            paymentMethod: method,
-            cartItems,
-            subtotal: cartTotal,
-            tax,
-            total,
-          }),
-        });
-
-        const data = (await response.json()) as { error?: string; orderId?: string };
-
-        if (!response.ok) {
-          throw new Error(data.error ?? "Failed to place order");
-        }
-
-        toast.success("Order placed! Payment on delivery.");
-        clearCart();
-        clearShippingAddress();
-        router.push(`/checkout/success?orderId=${encodeURIComponent(data.orderId ?? orderId)}`);
-        return;
-      }
-
-      // For online payments (UPI / Card) create Razorpay order on the Next.js server
       const createRes = await fetch("/api/checkout/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,13 +63,17 @@ export default function PaymentPage() {
         throw new Error(err.error ?? "Failed to create payment order");
       }
 
-      const order = (await createRes.json()) as any;
+      const order = (await createRes.json()) as {
+        id: string;
+        amount: number;
+        currency: string;
+        receipt?: string;
+      };
 
-      // Load Razorpay checkout script
       const loadRazorpay = () =>
         new Promise<boolean>((resolve) => {
           if (typeof window === "undefined") return resolve(false);
-          if ((window as any).Razorpay) return resolve(true);
+          if ((window as Window & { Razorpay?: unknown }).Razorpay) return resolve(true);
           const script = document.createElement("script");
           script.src = "https://checkout.razorpay.com/v1/checkout.js";
           script.onload = () => resolve(true);
@@ -115,11 +84,11 @@ export default function PaymentPage() {
       const ok = await loadRazorpay();
       if (!ok) throw new Error("Failed to load Razorpay SDK");
 
-      // Public test key (matches server). Replace with env var in production.
-      const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;;
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!razorpayKey) throw new Error("Payment service is not configured");
 
       const options = {
-        key: RAZORPAY_KEY,
+        key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
         name: "Threadz",
@@ -131,16 +100,16 @@ export default function PaymentPage() {
             setIsPlacingOrder(false);
           },
         },
-        handler: async (response: any) => {
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
           try {
             const verifyRes = await fetch("/api/checkout/razorpay/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
+              body: JSON.stringify(response),
             });
 
             const verifyData = await verifyRes.json().catch(() => ({}));
@@ -155,7 +124,7 @@ export default function PaymentPage() {
               body: JSON.stringify({
                 orderId,
                 shippingAddress,
-                paymentMethod: method,
+                paymentMethod: "razorpay",
                 cartItems,
                 subtotal: cartTotal,
                 tax,
@@ -172,7 +141,7 @@ export default function PaymentPage() {
             clearCart();
             clearShippingAddress();
             router.push(
-              `/checkout/success?orderId=${encodeURIComponent(orderData.orderId ?? orderId)}`
+              `/checkout/success?orderId=${encodeURIComponent(orderData.orderId ?? orderId)}`,
             );
           } catch (err) {
             const msg = err instanceof Error ? err.message : "Payment verification failed";
@@ -186,9 +155,9 @@ export default function PaymentPage() {
           contact: shippingAddress.phone,
         },
         theme: { color: "#000000" },
-      } as any;
+      };
 
-      const rzp = new (window as any).Razorpay(options);
+      const rzp = new (window as Window & { Razorpay: new (opts: typeof options) => { open: () => void } }).Razorpay(options);
       rzp.open();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Payment failed. Please try again.";
@@ -204,7 +173,7 @@ export default function PaymentPage() {
   return (
     <div className="container mx-auto px-4 py-12">
       {isPlacingOrder && (
-        <CheckoutLoadingOverlay message="Processing your payment..." />
+        <CheckoutLoadingOverlay message="Opening secure payment..." />
       )}
 
       <div className="flex items-center justify-between mb-4">
@@ -227,65 +196,20 @@ export default function PaymentPage() {
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h1 className="text-3xl font-serif mb-2">Payment</h1>
-              <p className="text-sm text-neutral-600">
-                Choose a payment method to complete your order.
+              <p className="text-sm text-neutral-600 mb-6">
+                Pay securely via Razorpay. Choose UPI, cards, netbanking, or wallets in the
+                next step.
               </p>
 
-              <fieldset disabled={isPlacingOrder} className="mt-6">
-                <Label className="text-sm">Payment method</Label>
-                <RadioGroup
-                  className="mt-3 space-y-3"
-                  value={method}
-                  onValueChange={(v) => setMethod(v as PaymentMethod)}
-                >
-                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
-                    <RadioGroupItem value="upi" id="upi" className="mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Wallet className="h-4 w-4" />
-                        <Label htmlFor="upi" className="font-medium">
-                          UPI
-                        </Label>
-                      </div>
-                      <p className="text-xs text-neutral-600 mt-1">
-                        Pay via UPI apps (GPay, PhonePe, Paytm).
-                      </p>
-                    </div>
-                  </div>
+              <div className="flex items-start gap-3 border border-neutral-200 bg-neutral-50 p-4 rounded-none mb-8">
+                <ShieldCheck className="h-5 w-5 text-neutral-700 mt-0.5 shrink-0" />
+                <div className="text-sm text-neutral-600">
+                  <p className="font-medium text-neutral-900 mb-1">Secure checkout powered by Razorpay</p>
+                  <p>UPI, debit/credit cards, netbanking, and wallets are available in the payment window.</p>
+                </div>
+              </div>
 
-                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
-                    <RadioGroupItem value="card" id="card" className="mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        <Label htmlFor="card" className="font-medium">
-                          Card
-                        </Label>
-                      </div>
-                      <p className="text-xs text-neutral-600 mt-1">
-                        Debit / Credit card.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 border border-neutral-300 bg-white p-4 rounded-none">
-                    <RadioGroupItem value="cod" id="cod" className="mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Landmark className="h-4 w-4" />
-                        <Label htmlFor="cod" className="font-medium">
-                          Cash on delivery
-                        </Label>
-                      </div>
-                      <p className="text-xs text-neutral-600 mt-1">
-                        Pay when the order arrives.
-                      </p>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </fieldset>
-
-              <div className="mt-8 flex gap-3 justify-end">
+              <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
                   className="rounded-none"
@@ -295,8 +219,8 @@ export default function PaymentPage() {
                   Edit shipping
                 </Button>
                 <Button
-                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[180px]"
-                  onClick={placeOrder}
+                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[200px]"
+                  onClick={payAndProceed}
                   disabled={isPlacingOrder}
                 >
                   {isPlacingOrder ? (
@@ -305,7 +229,7 @@ export default function PaymentPage() {
                       Processing...
                     </>
                   ) : (
-                    "Pay & place order"
+                    "Pay & Proceed"
                   )}
                 </Button>
               </div>

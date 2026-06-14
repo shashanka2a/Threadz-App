@@ -6,7 +6,7 @@ import type { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { ProductRating } from "@/components/product-rating";
 import {
   Select,
   SelectContent,
@@ -128,12 +128,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 mb-1">
-                    {[1, 2, 3, 4].map((star) => (
-                      <Star key={star} className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                    ))}
-                    <Star className="w-3 h-3 text-neutral-300" />
-                  </div>
+                    <ProductRating className="mb-1" />
                     <h3 className="font-medium mb-1">{product.name}</h3>
                     <p className="text-sm text-neutral-600 mb-1">{product.color}</p>
                     <p className="text-xs text-neutral-500 mb-2 line-clamp-1">{product.quality}</p>
