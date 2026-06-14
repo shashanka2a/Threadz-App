@@ -11,6 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+type RazorpayCheckout = new (options: Record<string, unknown>) => { open: () => void };
+
+function getRazorpayCheckout(): RazorpayCheckout | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as unknown as { Razorpay?: RazorpayCheckout }).Razorpay;
+}
+
 function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["shippingAddress"]>) {
   const parts = [
     address.addressLine1,
@@ -73,7 +80,7 @@ export default function PaymentPage() {
       const loadRazorpay = () =>
         new Promise<boolean>((resolve) => {
           if (typeof window === "undefined") return resolve(false);
-          if ((window as Window & { Razorpay?: unknown }).Razorpay) return resolve(true);
+          if (getRazorpayCheckout()) return resolve(true);
           const script = document.createElement("script");
           script.src = "https://checkout.razorpay.com/v1/checkout.js";
           script.onload = () => resolve(true);
@@ -157,7 +164,10 @@ export default function PaymentPage() {
         theme: { color: "#000000" },
       };
 
-      const rzp = new (window as Window & { Razorpay: new (opts: typeof options) => { open: () => void } }).Razorpay(options);
+      const Razorpay = getRazorpayCheckout();
+      if (!Razorpay) throw new Error("Failed to load Razorpay SDK");
+
+      const rzp = new Razorpay(options);
       rzp.open();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Payment failed. Please try again.";
