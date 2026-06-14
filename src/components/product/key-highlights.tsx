@@ -163,7 +163,7 @@ export function KeyHighlights({ imageSrc }: KeyHighlightsProps) {
                     width={400}
                     height={400}
                     sizes="(max-width: 1024px) 40vw, 220px"
-                    className="h-full w-full scale-125 object-cover"
+                    className="h-full w-full object-cover"
                     style={{ objectPosition: item.objectPosition }}
                   />
                 </div>

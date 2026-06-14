@@ -44,6 +44,7 @@ import {
 import { Plus, Edit, Trash2, Search, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Product } from "../../types/product";
 import { QUALITY_OPTIONS, getRetailPrice } from "../../data/categories";
+import { getProductImageUrl } from "../../data/product-images";
 import { toast } from "sonner";
 
 type ProductManagementProps = {
@@ -155,9 +156,7 @@ export function ProductManagement({
       color: formData.color,
       price: parseFloat(formData.price),
       mrp: parseFloat(formData.mrp || formData.price),
-      image:
-        formData.image ||
-        "https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
+      image: formData.image || getProductImageUrl(formData.color),
       category: formData.category as Product["category"],
       gsm: formData.gsm,
       quantity: sizeStock.S + sizeStock.M + sizeStock.L + sizeStock.XL,
@@ -325,7 +324,17 @@ export function ProductManagement({
             <Input
               id="color"
               value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              onChange={(e) => {
+                const color = e.target.value;
+                setFormData({
+                  ...formData,
+                  color,
+                  image: formData.image.startsWith("data:") ? formData.image : getProductImageUrl(color),
+                });
+                if (!formData.image.startsWith("data:")) {
+                  setImagePreview(getProductImageUrl(color));
+                }
+              }}
               placeholder="Charcoal Melange"
               className="rounded-none mt-1.5"
             />

@@ -1,56 +1,7 @@
 import { Product } from "../types/product";
 import { PRODUCT_CATEGORIES, SHOP_CATEGORIES } from "./categories";
 import { inventoryData } from "./inventory";
-
-const PRODUCT_IMAGES = {
-  charcoal:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/charcoal.png",
-  grey:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/grey.png",
-  cream:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/cream.png",
-  pink:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/pink.png",
-  burgandry: 
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/Burgandry.png",
-  dustyRose:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/dustyRose.png",
-  mossGreen:
-    "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/mossGreen.png",
-  steelGrey:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/steelGrey.png",
-  wildGinger:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/wildGinger.png",
-  // need to update the below pics
-  brown: 
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/brown.png",
-  parkPetrol:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/parkPetrol.png",
-  ltGreen:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/LTGreen.png",
-  plum:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/plum.png",
-  ptBlue:
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/PTBlue.png",
-
-} as const;
-
-const images: Record<string, string> = {
-  "Charcoal Melange": PRODUCT_IMAGES.charcoal,
-  "Grey Melange": PRODUCT_IMAGES.grey,
-  "Cream":  PRODUCT_IMAGES.cream,
-  "Burgundy": PRODUCT_IMAGES.burgandry,
-  "Dusty Rose": PRODUCT_IMAGES.dustyRose,
-  "Steel Grey": PRODUCT_IMAGES.steelGrey,
-  "Wild Ginger": PRODUCT_IMAGES.wildGinger,
-  "Moss Green": PRODUCT_IMAGES.mossGreen,
-  "Pink": PRODUCT_IMAGES.pink,
-  "Brown": PRODUCT_IMAGES.brown,
-  "Park Petrol": PRODUCT_IMAGES.parkPetrol,
-  "LT Green": PRODUCT_IMAGES.ltGreen,
-  "Plum": PRODUCT_IMAGES.plum,
-  "P.T Blue": PRODUCT_IMAGES.ptBlue
-};
+import { getProductImageUrl } from "./product-images";
 
 function extractGsm(quality: string): string {
   const match = quality.match(/(\d+)\s*GSM/i);
@@ -87,7 +38,7 @@ export const staticProducts: Product[] = inventoryData.map((item) => ({
   color: item.color,
   price: item.pricePerUnit,
   mrp: item.mrp,
-  image: images[item.color],
+  image: getProductImageUrl(item.color),
   category: item.category as Product["category"],
   gsm: extractGsm(item.quality),
   sizes: ["S", "M", "L", "XL"],

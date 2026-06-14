@@ -267,7 +267,7 @@ values
     'Charcoal Melange',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/charcoal.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/charcoal.jpg',
     'Plain T-Shirts',
     '180 GSM',
     8, 8, 8, 8, 32
@@ -281,7 +281,7 @@ values
     'Grey Melange',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/refs/heads/main/assets/grey.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/grey.jpg',
     'Plain T-Shirts',
     '180 GSM',
     6, 6, 6, 6, 24
@@ -295,7 +295,7 @@ values
     'Cream',
     499,
     899,
-    'https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/cream.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -309,7 +309,7 @@ values
     'LT Green',
     499,
     899,
-    'https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/LTGreen.png',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -323,7 +323,7 @@ values
     'Plum',
     499,
     899,
-    'https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/plum.png',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -337,7 +337,7 @@ values
     'P.T Blue',
     499,
     899,
-    'https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/PTBlue.png',
     'Plain T-Shirts',
     '180 GSM',
     9, 9, 9, 9, 36
@@ -351,7 +351,7 @@ values
     'Burgundy',
     599,
     999,
-    'https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/Burgandry.jpg',
     'Plain T-Shirts',
     '200 GSM',
     7, 7, 7, 7, 28
@@ -365,7 +365,7 @@ values
     'Dusty Rose',
     599,
     999,
-    'https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/dustyRose.jpg',
     'Plain T-Shirts',
     '200 GSM',
     8, 8, 8, 8, 32
@@ -379,7 +379,7 @@ values
     'Brown',
     599,
     999,
-    'https://images.unsplash.com/photo-1562157873-818bc0726f68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/brown.png',
     'Plain T-Shirts',
     '200 GSM',
     4, 5, 5, 5, 19
@@ -393,7 +393,7 @@ values
     'Steel Grey',
     599,
     1299,
-    'https://images.unsplash.com/photo-1680292783974-a9a336c10366?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/steelGrey.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -407,7 +407,7 @@ values
     'Wild Ginger',
     599,
     1299,
-    'https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/wildGinger.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     5, 6, 6, 6, 23
@@ -421,7 +421,7 @@ values
     'Moss Green',
     599,
     1299,
-    'https://images.unsplash.com/photo-1613461920867-9ea115fee900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/mossGreen.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -435,7 +435,7 @@ values
     'Park Petrol',
     599,
     1299,
-    'https://images.unsplash.com/photo-1651761179569-4ba2aa054997?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/parkPetrol.png',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -449,7 +449,7 @@ values
     'Pink',
     599,
     1199,
-    'https://images.unsplash.com/photo-1601056639638-c53c50e13ead?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/pink.jpg',
     'Plain T-Shirts',
     '220 GSM',
     12, 12, 12, 11, 47
