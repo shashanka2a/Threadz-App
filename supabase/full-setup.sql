@@ -309,7 +309,7 @@ values
     'LT Green',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/LTGreen.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/LTGreen.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -323,7 +323,7 @@ values
     'Plum',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/plum.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/plum.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -337,7 +337,7 @@ values
     'P.T Blue',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/PTBlue.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/PTBlue.jpg',
     'Plain T-Shirts',
     '180 GSM',
     9, 9, 9, 9, 36
@@ -379,7 +379,7 @@ values
     'Brown',
     599,
     999,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/brown.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/brown.jpg',
     'Plain T-Shirts',
     '200 GSM',
     4, 5, 5, 5, 19
@@ -435,7 +435,7 @@ values
     'Park Petrol',
     599,
     1299,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/parkPetrol.png',
+    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/parkPetrol.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
