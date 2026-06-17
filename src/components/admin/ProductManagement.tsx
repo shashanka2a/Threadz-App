@@ -64,6 +64,10 @@ export function ProductManagement({
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const hasCustomImage = (image: string) =>
+    image.startsWith("data:") || image.includes("res.cloudinary.com");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -100,22 +104,40 @@ export function ProductManagement({
     setImagePreview("");
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size should be less than 2MB");
-        return;
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error ?? "Failed to upload image");
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFormData({ ...formData, image: base64String });
-        setImagePreview(base64String);
-      };
-      reader.readAsDataURL(file);
+      setFormData((current) => ({ ...current, image: data.url! }));
+      setImagePreview(data.url);
+      toast.success("Image uploaded to Cloudinary");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload image");
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
     }
   };
 
@@ -272,26 +294,27 @@ export function ProductManagement({
           </div>
           <div className="flex-1 space-y-3">
             <div>
-              <label htmlFor="image-upload" className="cursor-pointer">
+              <label htmlFor="image-upload" className={`cursor-pointer ${isUploadingImage ? "pointer-events-none opacity-60" : ""}`}>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded border border-neutral-300 transition-colors">
                   <Upload className="h-4 w-4" />
-                  <span className="text-sm">Upload Image</span>
+                  <span className="text-sm">{isUploadingImage ? "Uploading..." : "Upload Image"}</span>
                 </div>
                 <input
                   id="image-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  disabled={isUploadingImage}
                   className="hidden"
                 />
               </label>
-              <p className="text-xs text-neutral-500 mt-2">JPG, PNG or WEBP (Max 2MB)</p>
+              <p className="text-xs text-neutral-500 mt-2">JPG, PNG or WEBP (Max 5MB) — stored on Cloudinary</p>
             </div>
             <div className="text-xs text-neutral-500">or</div>
             <div>
               <Input
                 placeholder="Enter image URL"
-                value={formData.image.startsWith('data:') ? '' : formData.image}
+                value={hasCustomImage(formData.image) ? "" : formData.image}
                 onChange={(e) => {
                   setFormData({ ...formData, image: e.target.value });
                   setImagePreview(e.target.value);
@@ -329,9 +352,9 @@ export function ProductManagement({
                 setFormData({
                   ...formData,
                   color,
-                  image: formData.image.startsWith("data:") ? formData.image : getProductImageUrl(color),
+                  image: hasCustomImage(formData.image) ? formData.image : getProductImageUrl(color),
                 });
-                if (!formData.image.startsWith("data:")) {
+                if (!hasCustomImage(formData.image)) {
                   setImagePreview(getProductImageUrl(color));
                 }
               }}

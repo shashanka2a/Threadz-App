@@ -1,24 +1,24 @@
-/** GitHub assets folder — use raw URLs so images load in the app. */
+/** Cloudinary-hosted product images. */
 export const PRODUCT_IMAGE_BASE_URL =
-  "https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets";
+  "https://res.cloudinary.com/ddmv1btb9/image/upload";
 
 export const PRODUCT_IMAGE_BY_COLOR: Record<string, string> = {
-  "Charcoal Melange": `${PRODUCT_IMAGE_BASE_URL}/charcoal.jpg`,
-  "Grey Melange": `${PRODUCT_IMAGE_BASE_URL}/grey.jpg`,
-  Cream: `${PRODUCT_IMAGE_BASE_URL}/cream.jpg`,
-  "LT Green": `${PRODUCT_IMAGE_BASE_URL}/LTGreen.jpg`,
-  Plum: `${PRODUCT_IMAGE_BASE_URL}/plum.jpg`,
-  "P.T Blue": `${PRODUCT_IMAGE_BASE_URL}/PTBlue.jpg`,
-  Burgundy: `${PRODUCT_IMAGE_BASE_URL}/Burgandry.jpg`,
-  "Dusty Rose": `${PRODUCT_IMAGE_BASE_URL}/dustyRose.jpg`,
-  Brown: `${PRODUCT_IMAGE_BASE_URL}/brown.jpg`,
-  "Steel Grey": `${PRODUCT_IMAGE_BASE_URL}/steelGrey.jpg`,
-  "Wild Ginger": `${PRODUCT_IMAGE_BASE_URL}/wildGinger.jpg`,
-  "Moss Green": `${PRODUCT_IMAGE_BASE_URL}/mossGreen.jpg`,
-  "Park Petrol": `${PRODUCT_IMAGE_BASE_URL}/parkPetrol.jpg`,
-  Pink: `${PRODUCT_IMAGE_BASE_URL}/pink.jpg`,
+  "Burgundy": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705767/Burgandry_ubwprt.jpg",
+  "LT Green": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705768/LTGreen_kivfro.jpg",
+  "P.T Blue": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705771/PTBlue_lbgdrv.jpg",
+  "Brown": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705772/brown_hgbhid.jpg",
+  "Charcoal Melange": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705773/charcoal_qjxuld.jpg",
+  "Cream": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705774/cream_tk7agx.jpg",
+  "Dusty Rose": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705775/dustyRose_blszip.jpg",
+  "Grey Melange": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705778/grey_qkze5u.jpg",
+  "Moss Green": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705780/mossGreen_tgogej.jpg",
+  "Park Petrol": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705782/parkPetrol_fxjrxh.jpg",
+  "Pink": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705784/pink_xnhxip.jpg",
+  "Plum": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705785/plum_doceoj.jpg",
+  "Steel Grey": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705787/steelGrey_gq3iex.jpg",
+  "Wild Ginger": "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705789/wildGinger_rc3pdj.jpg",
 };
 
 export function getProductImageUrl(color: string): string {
-  return PRODUCT_IMAGE_BY_COLOR[color] ?? `${PRODUCT_IMAGE_BASE_URL}/charcoal.jpg`;
+  return PRODUCT_IMAGE_BY_COLOR[color] ?? "https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705773/charcoal_qjxuld.jpg";
 }

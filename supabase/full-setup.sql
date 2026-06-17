@@ -267,7 +267,7 @@ values
     'Charcoal Melange',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/charcoal.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705773/charcoal_qjxuld.jpg',
     'Plain T-Shirts',
     '180 GSM',
     8, 8, 8, 8, 32
@@ -281,7 +281,7 @@ values
     'Grey Melange',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/grey.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705778/grey_qkze5u.jpg',
     'Plain T-Shirts',
     '180 GSM',
     6, 6, 6, 6, 24
@@ -295,7 +295,7 @@ values
     'Cream',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/cream.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705774/cream_tk7agx.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -309,7 +309,7 @@ values
     'LT Green',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/LTGreen.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705768/LTGreen_kivfro.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -323,7 +323,7 @@ values
     'Plum',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/plum.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705785/plum_doceoj.jpg',
     'Plain T-Shirts',
     '180 GSM',
     7, 7, 7, 7, 28
@@ -337,7 +337,7 @@ values
     'P.T Blue',
     499,
     899,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/PTBlue.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705771/PTBlue_lbgdrv.jpg',
     'Plain T-Shirts',
     '180 GSM',
     9, 9, 9, 9, 36
@@ -351,7 +351,7 @@ values
     'Burgundy',
     599,
     999,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/Burgandry.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705767/Burgandry_ubwprt.jpg',
     'Plain T-Shirts',
     '200 GSM',
     7, 7, 7, 7, 28
@@ -365,7 +365,7 @@ values
     'Dusty Rose',
     599,
     999,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/dustyRose.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705775/dustyRose_blszip.jpg',
     'Plain T-Shirts',
     '200 GSM',
     8, 8, 8, 8, 32
@@ -379,7 +379,7 @@ values
     'Brown',
     599,
     999,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/brown.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705772/brown_hgbhid.jpg',
     'Plain T-Shirts',
     '200 GSM',
     4, 5, 5, 5, 19
@@ -393,7 +393,7 @@ values
     'Steel Grey',
     599,
     1299,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/steelGrey.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705787/steelGrey_gq3iex.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -407,7 +407,7 @@ values
     'Wild Ginger',
     599,
     1299,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/wildGinger.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705789/wildGinger_rc3pdj.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     5, 6, 6, 6, 23
@@ -421,7 +421,7 @@ values
     'Moss Green',
     599,
     1299,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/mossGreen.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705780/mossGreen_tgogej.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -435,7 +435,7 @@ values
     'Park Petrol',
     599,
     1299,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/parkPetrol.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705782/parkPetrol_fxjrxh.jpg',
     'Oversized T-Shirts',
     '220 GSM',
     6, 6, 6, 6, 24
@@ -449,7 +449,7 @@ values
     'Pink',
     599,
     1199,
-    'https://raw.githubusercontent.com/shashanka2a/Threadz-App/main/assets/pink.jpg',
+    'https://res.cloudinary.com/ddmv1btb9/image/upload/v1781705784/pink_xnhxip.jpg',
     'Plain T-Shirts',
     '220 GSM',
     12, 12, 12, 11, 47
