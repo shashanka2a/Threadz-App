@@ -170,6 +170,84 @@ export interface Database {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          full_name: string;
+          phone: string;
+          email: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          full_name?: string;
+          phone?: string;
+          email?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          full_name?: string;
+          phone?: string;
+          email?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      addresses: {
+        Row: {
+          id: string;
+          user_id: string;
+          label: string;
+          full_name: string;
+          phone: string;
+          address_line1: string;
+          address_line2: string | null;
+          city: string;
+          state: string;
+          postal_code: string;
+          country: string;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          label?: string;
+          full_name: string;
+          phone: string;
+          address_line1: string;
+          address_line2?: string | null;
+          city: string;
+          state: string;
+          postal_code: string;
+          country?: string;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          label?: string;
+          full_name?: string;
+          phone?: string;
+          address_line1?: string;
+          address_line2?: string | null;
+          city?: string;
+          state?: string;
+          postal_code?: string;
+          country?: string;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       order_items: {
         Row: {
           id: string;
@@ -247,3 +325,6 @@ export type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 export type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 export type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderItemRow = Database["public"]["Tables"]["order_items"]["Row"];
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+export type AddressRow = Database["public"]["Tables"]["addresses"]["Row"];
+export type AddressInsert = Database["public"]["Tables"]["addresses"]["Insert"];

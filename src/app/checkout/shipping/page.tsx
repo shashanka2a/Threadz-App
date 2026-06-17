@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, type ShippingAddress } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { addressToShipping } from "@/lib/addresses";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { CheckoutProgress } from "@/components/checkout/checkout-progress";
 import { CheckoutLoadingOverlay } from "@/components/checkout/checkout-loading-overlay";
@@ -21,8 +23,10 @@ const checkoutInputClass =
 export default function ShippingPage() {
   const router = useRouter();
   const { cartItems, shippingAddress, setShippingAddress } = useCart();
+  const { user, profile, addresses, loading: authLoading } = useAuth();
   const [isCheckingCart, setIsCheckingCart] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -33,8 +37,29 @@ export default function ShippingPage() {
   }, [cartItems.length, router]);
 
   const initial = useMemo<ShippingAddress>(
-    () =>
-      shippingAddress ?? {
+    () => {
+      if (shippingAddress) return shippingAddress;
+
+      if (user && profile) {
+        const defaultAddress =
+          addresses.find((address) => address.isDefault) ?? addresses[0];
+        if (defaultAddress) {
+          return addressToShipping(defaultAddress, profile.email);
+        }
+        return {
+          fullName: profile.full_name,
+          phone: profile.phone,
+          email: profile.email,
+          addressLine1: "",
+          addressLine2: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: DEFAULT_COUNTRY,
+        };
+      }
+
+      return {
         fullName: "",
         phone: "",
         email: "",
@@ -44,16 +69,28 @@ export default function ShippingPage() {
         state: "",
         postalCode: "",
         country: DEFAULT_COUNTRY,
-      },
-    [shippingAddress],
+      };
+    },
+    [shippingAddress, user, profile, addresses],
   );
 
   const [form, setForm] = useState<ShippingAddress>(initial);
 
   useEffect(() => {
     setForm(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shippingAddress?.fullName]);
+    const defaultAddress =
+      addresses.find((address) => address.isDefault) ?? addresses[0];
+    if (defaultAddress) {
+      setSelectedAddressId(defaultAddress.id);
+    }
+  }, [initial, addresses]);
+
+  const applySavedAddress = (addressId: string) => {
+    const address = addresses.find((item) => item.id === addressId);
+    if (!address || !profile) return;
+    setSelectedAddressId(addressId);
+    setForm(addressToShipping(address, profile.email));
+  };
 
   const setField = (k: keyof ShippingAddress, v: string) => {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -84,7 +121,7 @@ export default function ShippingPage() {
     router.push("/checkout/payment");
   };
 
-  if (isCheckingCart) {
+  if (isCheckingCart || authLoading) {
     return <CheckoutLoadingOverlay message="Loading checkout..." />;
   }
 
@@ -109,6 +146,44 @@ export default function ShippingPage() {
           <Card className="border-neutral-200 rounded-none">
             <CardContent className="p-6">
               <h1 className="text-3xl font-serif mb-6">Shipping details</h1>
+
+              {user && addresses.length > 0 && (
+                <div className="mb-6">
+                  <Label className="text-sm mb-2 block">Saved addresses</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {addresses.map((address) => (
+                      <button
+                        key={address.id}
+                        type="button"
+                        onClick={() => applySavedAddress(address.id)}
+                        className={`text-left border p-3 rounded-none transition-colors ${
+                          selectedAddressId === address.id
+                            ? "border-black bg-neutral-50"
+                            : "border-neutral-300 hover:border-neutral-500"
+                        }`}
+                      >
+                        <p className="font-medium text-sm">{address.label}</p>
+                        <p className="text-xs text-neutral-600 mt-1">
+                          {address.fullName} · {address.city}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!user && (
+                <p className="text-sm text-neutral-600 mb-6">
+                  <button
+                    type="button"
+                    className="underline underline-offset-4"
+                    onClick={() => router.push("/login?next=/checkout/shipping")}
+                  >
+                    Sign in
+                  </button>{" "}
+                  to use saved addresses.
+                </p>
+              )}
 
               <fieldset disabled={isSubmitting} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">

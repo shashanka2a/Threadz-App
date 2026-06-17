@@ -7,8 +7,8 @@ import {
   ShoppingCart,
   Moon,
   Sun,
-  User,
   Menu,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
+import { UserAccountButton } from "@/components/user-account-button";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -116,6 +118,9 @@ function ThemeToggle({ className }: { className?: string }) {
 
 function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const router = useRouter();
+  const { user } = useAuth();
+  const accountHref = user ? "/profile" : "/login";
+  const accountLabel = user ? "Profile" : "Sign in";
 
   return (
     <SheetContent side="left" className="w-[min(100vw-2rem,320px)] rounded-none p-0">
@@ -140,6 +145,17 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       </nav>
 
       <div className="mt-auto border-t border-border px-6 py-5 space-y-3">
+        <Button
+          variant="outline"
+          className="w-full rounded-none justify-start"
+          onClick={() => {
+            onNavigate();
+            router.push(accountHref);
+          }}
+        >
+          <User className="h-4 w-4 mr-2" />
+          {accountLabel}
+        </Button>
         <Button
           variant="outline"
           className="w-full rounded-none justify-start"
@@ -211,10 +227,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-4">
               <ThemeToggle />
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <User className="h-4 w-4" />
-                <span className="sr-only">Account</span>
-              </Button>
+              <UserAccountButton />
               <CartButton />
             </div>
           </div>
