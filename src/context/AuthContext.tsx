@@ -13,6 +13,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileRow } from "@/lib/supabase/database.types";
 import { mapAddressRow, type SavedAddress } from "@/lib/addresses";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 
 type AuthContextType = {
   user: User | null;
@@ -24,6 +25,7 @@ type AuthContextType = {
     email: string,
     password: string,
     fullName: string,
+    redirectPath?: string,
   ) => Promise<{ error?: string; needsConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -152,12 +154,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    redirectPath = "/profile",
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
+        emailRedirectTo: getAuthCallbackUrl(redirectPath),
       },
     });
 

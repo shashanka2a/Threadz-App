@@ -279,24 +279,24 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/contact" className="hover:text-foreground transition-colors">
                     Contact Us
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/shipping" className="hover:text-foreground transition-colors">
                     Shipping Info
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/returns" className="hover:text-foreground transition-colors">
                     Returns
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/size-guide" className="hover:text-foreground transition-colors">
                     Size Guide
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -306,24 +306,24 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/about" className="hover:text-foreground transition-colors">
                     About Us
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/sustainability" className="hover:text-foreground transition-colors">
                     Sustainability
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/privacy" className="hover:text-foreground transition-colors">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <Link href="/terms" className="hover:text-foreground transition-colors">
                     Terms
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

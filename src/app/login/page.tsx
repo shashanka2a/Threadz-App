@@ -96,7 +96,14 @@ function LoginForm() {
 
           <p className="text-sm text-neutral-600 mt-6 text-center">
             New to THREADZ?{" "}
-            <Link href="/signup" className="text-black underline underline-offset-4">
+            <Link
+              href={
+                nextPath !== "/profile"
+                  ? `/signup?next=${encodeURIComponent(nextPath)}`
+                  : "/signup"
+              }
+              className="text-black underline underline-offset-4"
+            >
               Create an account
             </Link>
           </p>

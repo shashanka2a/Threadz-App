@@ -2,7 +2,7 @@
 
 import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { useAuth } from "@/context/AuthContext";
 
 function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") ?? "/profile";
   const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState("");
@@ -30,7 +32,7 @@ function SignupForm() {
 
     setIsLoading(true);
 
-    const result = await signUp(email, password, fullName);
+    const result = await signUp(email, password, fullName, nextPath);
     if (result.error) {
       toast.error(result.error);
       setIsLoading(false);
@@ -44,7 +46,7 @@ function SignupForm() {
     }
 
     toast.success("Account created");
-    router.push("/profile");
+    router.push(nextPath);
     router.refresh();
   };
 
@@ -120,7 +122,14 @@ function SignupForm() {
 
           <p className="text-sm text-neutral-600 mt-6 text-center">
             Already have an account?{" "}
-            <Link href="/login" className="text-black underline underline-offset-4">
+            <Link
+              href={
+                nextPath !== "/profile"
+                  ? `/login?next=${encodeURIComponent(nextPath)}`
+                  : "/login"
+              }
+              className="text-black underline underline-offset-4"
+            >
               Sign in
             </Link>
           </p>
