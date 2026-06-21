@@ -17,8 +17,8 @@ export default function PrivacyPage() {
       <p>
         Payment processing is handled by secure third-party providers. You may request
         access to or deletion of your account data by emailing{" "}
-        <a href="mailto:hello@threadz.studio" className="underline underline-offset-4">
-          hello@threadz.studio
+        <a href="mailto:support.threadzstudio@gmail.com" className="underline underline-offset-4">
+          support.threadzstudio@gmail.com
         </a>
         .
       </p>

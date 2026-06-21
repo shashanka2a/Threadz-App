@@ -20,8 +20,8 @@ export default function TermsPage() {
       </p>
       <p>
         For questions about these terms, contact{" "}
-        <a href="mailto:hello@threadz.studio" className="underline underline-offset-4">
-          hello@threadz.studio
+        <a href="mailto:support.threadzstudio@gmail.com" className="underline underline-offset-4">
+          support.threadzstudio@gmail.com
         </a>
         .
       </p>

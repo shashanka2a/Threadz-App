@@ -11,8 +11,8 @@ export default function ContactPage() {
       </p>
       <p>
         <strong>Email:</strong>{" "}
-        <a href="mailto:hello@threadz.studio" className="underline underline-offset-4">
-          hello@threadz.studio
+        <a href="mailto:support.threadzstudio@gmail.com" className="underline underline-offset-4">
+          support.threadzstudio@gmail.com
         </a>
       </p>
       <p>
