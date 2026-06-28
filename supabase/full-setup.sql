@@ -58,7 +58,7 @@ create table if not exists public.orders (
   state text not null,
   postal_code text not null,
   country text not null default 'India',
-  payment_method text not null check (payment_method in ('upi', 'card', 'cod')),
+  payment_method text not null,
   subtotal numeric(10, 2) not null check (subtotal >= 0),
   tax numeric(10, 2) not null check (tax >= 0),
   total numeric(10, 2) not null check (total >= 0),
