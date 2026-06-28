@@ -6,8 +6,8 @@ type ContentPageProps = {
 
 export function ContentPage({ title, description, children }: ContentPageProps) {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-3xl">
-      <h1 className="text-3xl md:text-4xl font-serif mb-3">{title}</h1>
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-3">{title}</h1>
       {description ? (
         <p className="text-muted-foreground mb-8">{description}</p>
       ) : (

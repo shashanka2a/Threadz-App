@@ -28,7 +28,7 @@ export function AdminNav() {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 pb-5 border-b border-neutral-200">
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {ADMIN_LINKS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (

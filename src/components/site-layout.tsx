@@ -182,7 +182,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-background transition-colors">
+    <div className="min-h-screen bg-background transition-colors overflow-x-hidden">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
         <div className="container mx-auto px-4 py-3 md:py-4">
           {/* Mobile header */}
@@ -201,7 +201,8 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
               <Logo compact />
             </div>
 
-            <div className="flex items-center justify-end gap-0.5">
+            <div className="flex items-center justify-end gap-1">
+              <UserAccountButton />
               <CartButton />
             </div>
           </div>
@@ -236,7 +237,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
       <main>{children}</main>
 
-      <footer className="border-t border-border mt-20 bg-background transition-colors">
+      <footer className="border-t border-border mt-12 md:mt-20 bg-background transition-colors">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

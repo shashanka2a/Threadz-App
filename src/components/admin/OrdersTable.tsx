@@ -113,7 +113,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               </div>
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px] rounded-none border-neutral-300">
+              <SelectTrigger className="w-full sm:w-[180px] rounded-none border-neutral-300">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -124,7 +124,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               </SelectContent>
             </Select>
             <Select value={filterPayment} onValueChange={setFilterPayment}>
-              <SelectTrigger className="w-[180px] rounded-none border-neutral-300">
+              <SelectTrigger className="w-full sm:w-[180px] rounded-none border-neutral-300">
                 <SelectValue placeholder="Payment" />
               </SelectTrigger>
               <SelectContent>

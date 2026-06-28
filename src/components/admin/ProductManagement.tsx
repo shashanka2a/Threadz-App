@@ -331,7 +331,7 @@ export function ProductManagement({
       {/* Basic Information */}
       <div>
         <h4 className="text-sm font-medium mb-3">Basic Information</h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name" className="text-sm">Product Name *</Label>
             <Input
@@ -382,7 +382,7 @@ export function ProductManagement({
       {/* Category & Specifications */}
       <div>
         <h4 className="text-sm font-medium mb-3">Category & Specifications</h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="category" className="text-sm">Category *</Label>
             <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
@@ -440,7 +440,7 @@ export function ProductManagement({
       {/* Pricing */}
       <div>
         <h4 className="text-sm font-medium mb-3">Pricing</h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="price" className="text-sm">Selling Price *</Label>
             <div className="relative mt-1.5">
@@ -482,7 +482,7 @@ export function ProductManagement({
       {/* Stock by Size */}
       <div>
         <h4 className="text-sm font-medium mb-3">Stock by Size</h4>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <Label htmlFor="sizeS" className="text-sm">S</Label>
             <Input
@@ -550,7 +550,7 @@ export function ProductManagement({
     <div>
       <Card className="border-neutral-200 rounded-none mb-6">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
               <Input
@@ -561,7 +561,7 @@ export function ProductManagement({
               />
             </div>
             <Button
-              className="bg-black text-white hover:bg-neutral-800 rounded-none"
+              className="bg-black text-white hover:bg-neutral-800 rounded-none w-full sm:w-auto shrink-0"
               onClick={() => {
                 resetForm();
                 setIsAddDialogOpen(true);
@@ -593,8 +593,8 @@ export function ProductManagement({
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-200 rounded-none overflow-hidden">
-        <CardContent className="p-0">
+      <Card className="border-neutral-200 rounded-none">
+        <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-[1040px] table-fixed">
             <colgroup>
               <col className="w-[56px]" />

@@ -131,7 +131,7 @@ export function KeyHighlights({ imageSrc }: KeyHighlightsProps) {
         Every detail, crafted for everyday comfort.
       </p>
 
-      <div className="relative px-10">
+      <div className="relative px-6 sm:px-10">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center">
           <Button
             type="button"
@@ -153,7 +153,7 @@ export function KeyHighlights({ imageSrc }: KeyHighlightsProps) {
             <div
               key={item.title}
               data-highlight-card
-              className="flex w-[calc(50%-12px)] min-w-[calc(50%-12px)] shrink-0 snap-start flex-col items-center text-center"
+              className="flex w-[85vw] sm:w-[calc(50%-12px)] sm:min-w-[calc(50%-12px)] shrink-0 snap-start flex-col items-center text-center"
             >
               <div className="relative mb-8 w-full">
                 <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">

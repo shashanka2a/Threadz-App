@@ -44,16 +44,16 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
   });
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-12 text-center">
-        <h1 className="text-5xl font-serif mb-4">Shop</h1>
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="mb-8 md:mb-12 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4">Shop</h1>
         <p className="text-neutral-600">
           Explore our premium collection of customizable apparel
         </p>
       </div>
 
-      <div className="mb-8 flex flex-wrap gap-4 justify-center">
-        <div className="w-64">
+      <div className="mb-8 flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
+        <div className="w-full sm:w-64">
           <Select
             value={selectedCategory}
             onValueChange={(value) => setSelectedCategory(value)}
@@ -71,7 +71,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
           </Select>
         </div>
 
-        <div className="w-64">
+        <div className="w-full sm:w-64">
           <Select
             value={selectedColor}
             onValueChange={(value) => setSelectedColor(value)}

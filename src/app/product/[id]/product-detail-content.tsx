@@ -56,8 +56,8 @@ export default function ProductDetailContent({
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-2 text-sm text-neutral-600 mb-6">
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="flex items-center gap-2 text-sm text-neutral-600 mb-6 overflow-x-auto whitespace-nowrap pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button onClick={() => router.push("/")} className="hover:text-black">
           Home
         </button>
@@ -72,7 +72,7 @@ export default function ProductDetailContent({
         <span className="text-black">{product.name}</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <div>
           <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
             <ProductImage
@@ -94,8 +94,8 @@ export default function ProductDetailContent({
         </div>
 
         <div>
-          <div className="flex items-start justify-between mb-4">
-            <div>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="rounded-none text-xs">
                   {product.category}
@@ -106,7 +106,7 @@ export default function ProductDetailContent({
                   </Badge>
                 )}
               </div>
-              <h1 className="text-3xl font-serif">{product.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-serif">{product.name}</h1>
               <p className="text-sm text-neutral-600 mt-2">{product.description}</p>
             </div>
             <button className="p-2 hover:bg-neutral-100 rounded-full">
@@ -114,9 +114,9 @@ export default function ProductDetailContent({
             </button>
           </div>
 
-          <div className="flex items-baseline gap-3 mb-2">
-            <span className="text-3xl">₹{product.price}</span>
-            <span className="text-lg text-neutral-500 line-through">MRP: ₹{product.mrp}</span>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+            <span className="text-2xl sm:text-3xl">₹{product.price}</span>
+            <span className="text-base sm:text-lg text-neutral-500 line-through">MRP: ₹{product.mrp}</span>
             <span className="text-sm text-green-600">{discount}% OFF</span>
           </div>
           <p className="text-sm text-neutral-600 mb-4">inclusive of all taxes</p>
@@ -150,7 +150,7 @@ export default function ProductDetailContent({
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm">Select Color - {selectedColor}</label>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {colorVariants.map((variant) => (
                 <button
                   key={variant.id}
@@ -158,7 +158,7 @@ export default function ProductDetailContent({
                     setSelectedColor(variant.color);
                     router.push(`/product/${variant.id}`);
                   }}
-                  className={`relative w-14 h-14 border-2 rounded overflow-hidden ${
+                  className={`relative w-14 h-14 shrink-0 border-2 rounded overflow-hidden ${
                     variant.id === product.id ? "border-black" : "border-neutral-300"
                   }`}
                 >
@@ -208,7 +208,7 @@ export default function ProductDetailContent({
             Add to Cart
           </Button>
 
-          <div className="grid grid-cols-3 gap-4 mb-6 pb-6 border-b border-neutral-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-neutral-200">
             <div className="flex items-center gap-2">
               <Banknote className="h-5 w-5 text-neutral-600" />
               <div>

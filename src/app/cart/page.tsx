@@ -42,7 +42,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       <Button
         variant="ghost"
         onClick={() => router.push("/shop")}
@@ -56,8 +56,8 @@ export default function CartPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-serif">Shopping Cart</h1>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 className="text-2xl sm:text-3xl font-serif">Shopping Cart</h1>
             <Button
               variant="outline"
               size="sm"
@@ -65,7 +65,7 @@ export default function CartPage() {
                 clearCart();
                 toast.success("Cart cleared");
               }}
-              className="rounded-none"
+              className="rounded-none w-full sm:w-auto"
             >
               Clear Cart
             </Button>
@@ -78,8 +78,8 @@ export default function CartPage() {
                 className="border-neutral-200 rounded-none"
               >
                 <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className="relative w-24 h-24 bg-neutral-100 overflow-hidden flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative w-full sm:w-24 h-48 sm:h-24 bg-neutral-100 overflow-hidden flex-shrink-0">
                       <Image
                         src={item.image}
                         alt={item.name}
@@ -107,7 +107,7 @@ export default function CartPage() {
                         </Button>
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
                           <Button
                             variant="outline"
@@ -119,7 +119,7 @@ export default function CartPage() {
                                 item.cartQuantity - 1
                               )
                             }
-                            className="h-8 w-8 rounded-none border-neutral-300"
+                            className="h-10 w-10 rounded-none border-neutral-300"
                           >
                             -
                           </Button>
@@ -134,13 +134,13 @@ export default function CartPage() {
                                 item.cartQuantity + 1
                               )
                             }
-                            className="h-8 w-8 rounded-none border-neutral-300"
+                            className="h-10 w-10 rounded-none border-neutral-300"
                           >
                             +
                           </Button>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-left sm:text-right">
                           <p className="text-lg">₹{item.price * item.cartQuantity}</p>
                           <p className="text-xs text-neutral-500">₹{item.price} each</p>
                         </div>
@@ -154,7 +154,7 @@ export default function CartPage() {
         </div>
 
         <div>
-          <Card className="border-neutral-200 rounded-none sticky top-4">
+          <Card className="border-neutral-200 rounded-none lg:sticky lg:top-20">
             <CardContent className="p-6">
               <h2 className="text-xl font-serif mb-6">Order Summary</h2>
 

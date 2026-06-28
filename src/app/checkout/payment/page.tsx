@@ -181,15 +181,15 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       {isPlacingOrder && (
         <CheckoutLoadingOverlay message="Opening secure payment..." />
       )}
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <Button
           variant="ghost"
-          className="rounded-none"
+          className="rounded-none w-fit"
           onClick={() => router.push("/checkout/shipping")}
           disabled={isPlacingOrder}
         >
@@ -204,8 +204,8 @@ export default function PaymentPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-neutral-200 rounded-none">
-            <CardContent className="p-6">
-              <h1 className="text-3xl font-serif mb-2">Payment</h1>
+            <CardContent className="p-4 sm:p-6">
+              <h1 className="text-2xl sm:text-3xl font-serif mb-2">Payment</h1>
               <p className="text-sm text-neutral-600 mb-6">
                 Pay securely via Razorpay. Choose UPI, cards, netbanking, or wallets in the
                 next step.
@@ -219,17 +219,17 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 justify-end">
+              <div className="flex w-full flex-col gap-3 md:flex-row md:justify-end md:items-stretch">
                 <Button
                   variant="outline"
-                  className="rounded-none"
+                  className="rounded-none w-full md:w-auto order-2 md:order-1"
                   onClick={() => router.push("/checkout/shipping")}
                   disabled={isPlacingOrder}
                 >
                   Edit shipping
                 </Button>
                 <Button
-                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[200px]"
+                  className="rounded-none bg-black text-white hover:bg-neutral-800 w-full md:w-auto md:min-w-[200px] order-1 md:order-2"
                   onClick={payAndProceed}
                   disabled={isPlacingOrder}
                 >
@@ -263,7 +263,7 @@ export default function PaymentPage() {
         </div>
 
         <div>
-          <div className="sticky top-4">
+          <div className="lg:sticky lg:top-20">
             <OrderSummary title="Order Summary" />
           </div>
         </div>

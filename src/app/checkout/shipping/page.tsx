@@ -126,13 +126,13 @@ export default function ShippingPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       {isSubmitting && (
         <CheckoutLoadingOverlay message="Saving shipping details..." />
       )}
 
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="ghost" className="rounded-none" onClick={() => router.push("/cart")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <Button variant="ghost" className="rounded-none w-fit" onClick={() => router.push("/cart")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to cart
         </Button>
@@ -144,8 +144,8 @@ export default function ShippingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card className="border-neutral-200 rounded-none">
-            <CardContent className="p-6">
-              <h1 className="text-3xl font-serif mb-6">Shipping details</h1>
+            <CardContent className="p-4 sm:p-6">
+              <h1 className="text-2xl sm:text-3xl font-serif mb-6">Shipping details</h1>
 
               {user && addresses.length > 0 && (
                 <div className="mb-6">
@@ -278,17 +278,17 @@ export default function ShippingPage() {
                 </div>
               </fieldset>
 
-              <div className="mt-8 flex gap-3 justify-end">
+              <div className="mt-8 flex w-full flex-col gap-3 md:flex-row md:justify-end md:items-stretch">
                 <Button
                   variant="outline"
-                  className="rounded-none"
+                  className="rounded-none w-full md:w-auto order-2 md:order-1"
                   onClick={() => router.push("/shop")}
                   disabled={isSubmitting}
                 >
                   Continue shopping
                 </Button>
                 <Button
-                  className="rounded-none bg-black text-white hover:bg-neutral-800 min-w-[180px]"
+                  className="rounded-none bg-black text-white hover:bg-neutral-800 w-full md:w-auto md:min-w-[180px] order-1 md:order-2"
                   onClick={onContinue}
                   disabled={isSubmitting}
                 >
@@ -307,7 +307,7 @@ export default function ShippingPage() {
         </div>
 
         <div>
-          <div className="sticky top-4">
+          <div className="lg:sticky lg:top-20">
             <OrderSummary />
           </div>
         </div>

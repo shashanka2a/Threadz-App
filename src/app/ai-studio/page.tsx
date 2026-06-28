@@ -30,11 +30,11 @@ export default function AIStudioPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-serif mb-4">AI Studio</h1>
-          <p className="text-neutral-600 text-lg">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4">AI Studio</h1>
+          <p className="text-neutral-600 text-base sm:text-lg">
             Create unique designs with AI or upload your own artwork
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function AIStudioPage() {
                       <label className="text-sm uppercase tracking-wider mb-2 block">
                         Style
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {["Minimalist", "Abstract", "Vintage", "Modern", "Retro", "Geometric"].map(
                           (style) => (
                             <Button
@@ -148,7 +148,7 @@ export default function AIStudioPage() {
             <Card className="border-neutral-200 rounded-none">
               <CardContent className="p-12 text-center">
                 <div
-                  className="border-2 border-dashed border-neutral-300 rounded-none p-16 cursor-pointer hover:border-black transition-colors"
+                  className="border-2 border-dashed border-neutral-300 rounded-none p-8 sm:p-16 cursor-pointer hover:border-black transition-colors"
                   onClick={handleUpload}
                 >
                   <Upload className="h-16 w-16 mx-auto mb-4 text-neutral-400" />

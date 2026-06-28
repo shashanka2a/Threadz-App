@@ -14,13 +14,13 @@ export default function SuccessClient() {
   const placedAt = useMemo(() => new Date().toLocaleString(), []);
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-10 md:py-16">
       <CheckoutProgress current="success" />
       <div className="max-w-2xl mx-auto">
         <Card className="border-neutral-200 rounded-none">
-          <CardContent className="p-10 text-center">
+          <CardContent className="p-6 sm:p-10 text-center">
             <CheckCircle2 className="h-14 w-14 mx-auto mb-4 text-green-600" />
-            <h1 className="text-4xl font-serif mb-2">Order confirmed</h1>
+            <h1 className="text-2xl sm:text-4xl font-serif mb-2">Order confirmed</h1>
             <p className="text-neutral-600 mb-8">
               Thanks for your order. We’ll send tracking details once it ships.
             </p>

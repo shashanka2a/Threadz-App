@@ -190,13 +190,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <div className="flex items-start justify-between gap-4 mb-8">
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-serif mb-1">My Profile</h1>
-          <p className="text-sm text-neutral-600">{profile?.email ?? user.email}</p>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-1">My Profile</h1>
+          <p className="text-sm text-neutral-600 break-all">{profile?.email ?? user.email}</p>
         </div>
-        <Button variant="outline" className="rounded-none" onClick={handleSignOut}>
+        <Button variant="outline" className="rounded-none w-full sm:w-auto" onClick={handleSignOut}>
           <LogOut className="h-4 w-4 mr-2" />
           Sign out
         </Button>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
 
         <Card className="border-neutral-200 rounded-none">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
               <div>
                 <h2 className="text-lg font-medium">Saved addresses</h2>
                 <p className="text-sm text-neutral-600">
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                 </p>
               </div>
               <Button
-                className="rounded-none bg-black text-white hover:bg-neutral-800"
+                className="rounded-none bg-black text-white hover:bg-neutral-800 w-full sm:w-auto"
                 onClick={openNewAddress}
               >
                 <Plus className="h-4 w-4 mr-2" />

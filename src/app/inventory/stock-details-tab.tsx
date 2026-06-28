@@ -106,7 +106,7 @@ export function StockDetailsTab({
               </div>
             </div>
             <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
-              <SelectTrigger className="w-[180px] rounded-none border-neutral-300">
+              <SelectTrigger className="w-full sm:w-[180px] rounded-none border-neutral-300">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -118,7 +118,7 @@ export function StockDetailsTab({
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v)}>
-              <SelectTrigger className="w-[180px] rounded-none border-neutral-300">
+              <SelectTrigger className="w-full sm:w-[180px] rounded-none border-neutral-300">
                 <SelectValue placeholder="Stock Status" />
               </SelectTrigger>
               <SelectContent>

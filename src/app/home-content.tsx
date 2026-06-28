@@ -21,7 +21,7 @@ export default function HomeContent({ products }: HomeContentProps) {
     <div>
       <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-8xl mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6">
             <span className="font-serif text-foreground">Premium.</span>
             <br />
             <span className="font-serif italic text-muted-foreground">Everyday T-Shirts.</span>
@@ -56,7 +56,7 @@ export default function HomeContent({ products }: HomeContentProps) {
 
       <section className="container mx-auto px-4 py-16">
         <div className="mb-8">
-          <h2 className="text-4xl font-serif mb-2 text-foreground">Our Collection</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-2 text-foreground">Our Collection</h2>
           <p className="text-muted-foreground">
             Explore our premium quality t-shirts in various colors
           </p>
