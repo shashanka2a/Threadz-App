@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRazorpayClient, type CreateOrderBody } from "@/lib/razorpay";
+import {
+  getRazorpayClient,
+  getRazorpayErrorMessage,
+  getRazorpayErrorStatus,
+  sanitizeReceipt,
+  toRazorpayAmountPaise,
+  type CreateOrderBody,
+} from "@/lib/razorpay";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateOrderBody;
+
+    if (!body.amount || body.amount <= 0) {
+      return NextResponse.json({ error: "Invalid order amount" }, { status: 400 });
+    }
+
     const options = {
-      amount: Math.round((body.amount ?? 0) * 100),
+      amount: toRazorpayAmountPaise(body.amount),
       currency: body.currency ?? "INR",
-      receipt: body.receipt,
+      receipt: sanitizeReceipt(body.receipt),
       notes: body.notes,
     };
 
@@ -16,10 +30,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating Razorpay order:", error);
 
-    if (error instanceof Error && error.message === "Razorpay credentials are not configured") {
-      return NextResponse.json({ error: "Payment service is not configured" }, { status: 503 });
-    }
-
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    return NextResponse.json(
+      { error: getRazorpayErrorMessage(error) },
+      { status: getRazorpayErrorStatus(error) },
+    );
   }
 }

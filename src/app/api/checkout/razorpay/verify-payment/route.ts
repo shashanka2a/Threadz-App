@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getRazorpayKeySecret, type VerifyPaymentBody } from "@/lib/razorpay";
+import {
+  getRazorpayErrorMessage,
+  getRazorpayErrorStatus,
+  getRazorpayKeySecret,
+  type VerifyPaymentBody,
+} from "@/lib/razorpay";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,16 +25,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error verifying Razorpay payment:", error);
 
-    if (error instanceof Error && error.message === "Razorpay credentials are not configured") {
-      return NextResponse.json(
-        { status: "error", message: "Payment service is not configured" },
-        { status: 503 },
-      );
-    }
-
     return NextResponse.json(
-      { status: "error", message: "Failed to verify payment" },
-      { status: 500 },
+      { status: "error", message: getRazorpayErrorMessage(error) },
+      { status: getRazorpayErrorStatus(error) },
     );
   }
 }
