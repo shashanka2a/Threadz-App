@@ -153,7 +153,7 @@ export function CategoryManagement({ categories, onRefresh }: CategoryManagement
     }
   };
 
-  const CategoryForm = () => (
+  const renderCategoryForm = () => (
     <div className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="categoryName" className="text-sm font-medium">
@@ -184,7 +184,7 @@ export function CategoryManagement({ categories, onRefresh }: CategoryManagement
     </div>
   );
 
-  const CategoryDialog = ({
+  const renderCategoryDialog = ({
     open,
     onOpenChange,
     title,
@@ -209,7 +209,7 @@ export function CategoryManagement({ categories, onRefresh }: CategoryManagement
         </div>
 
         <div className="px-6 py-5">
-          <CategoryForm />
+          {renderCategoryForm()}
         </div>
 
         <DialogFooter className="px-6 py-4 bg-neutral-50 border-t border-neutral-100 gap-2 sm:gap-3">
@@ -329,23 +329,23 @@ export function CategoryManagement({ categories, onRefresh }: CategoryManagement
         </CardContent>
       </Card>
 
-      <CategoryDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        title="Add New Category"
-        description="Create a new product category"
-        submitLabel="Add Category"
-        onSubmit={handleAdd}
-      />
+      {renderCategoryDialog({
+        open: isAddDialogOpen,
+        onOpenChange: setIsAddDialogOpen,
+        title: "Add New Category",
+        description: "Create a new product category",
+        submitLabel: "Add Category",
+        onSubmit: handleAdd,
+      })}
 
-      <CategoryDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        title="Edit Category"
-        description="Update the category details"
-        submitLabel="Save Changes"
-        onSubmit={handleUpdate}
-      />
+      {renderCategoryDialog({
+        open: isEditDialogOpen,
+        onOpenChange: setIsEditDialogOpen,
+        title: "Edit Category",
+        description: "Update the category details",
+        submitLabel: "Save Changes",
+        onSubmit: handleUpdate,
+      })}
 
       <AlertDialog open={!!deleteCategoryId} onOpenChange={() => setDeleteCategoryId(null)}>
         <AlertDialogContent className="rounded-none max-w-md">

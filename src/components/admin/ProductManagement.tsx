@@ -266,7 +266,7 @@ export function ProductManagement({
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const ProductForm = () => (
+  const renderProductForm = () => (
     <div className="grid gap-6 py-4">
       {/* Image Upload Section */}
       <div>
@@ -578,7 +578,7 @@ export function ProductManagement({
                     Fill in the details to add a new product to your inventory
                   </DialogDescription>
                 </DialogHeader>
-                <ProductForm />
+                {renderProductForm()}
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-none">
                     Cancel
@@ -699,7 +699,7 @@ export function ProductManagement({
               Update the product details
             </DialogDescription>
           </DialogHeader>
-          <ProductForm />
+          {renderProductForm()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="rounded-none">
               Cancel
