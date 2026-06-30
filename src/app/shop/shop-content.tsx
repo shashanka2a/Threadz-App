@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProductImage } from "@/components/product-image";
+import { ProductStockBadgeRow } from "@/components/product/product-stock-badges";
 
 type ShopContentProps = {
   products: Product[];
@@ -122,11 +123,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
                       <Badge variant="outline" className="rounded-none text-[10px]">
                         {product.category}
                       </Badge>
-                      {product.quantity < 25 && (
-                        <Badge className="rounded-none text-[10px] bg-yellow-400 text-black hover:bg-yellow-400">
-                          Low Stock
-                        </Badge>
-                      )}
+                      <ProductStockBadgeRow product={product} />
                     </div>
                     <ProductRating className="mb-1" />
                     <h3 className="font-medium mb-1">{product.name}</h3>

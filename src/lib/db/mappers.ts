@@ -77,3 +77,23 @@ export function mapProductToUpsert(product: Product): ProductInsert {
     is_active: true,
   };
 }
+
+export function mapProductToUpdate(product: Product) {
+  return {
+    category_id: getCategoryId(product.category),
+    name: product.name,
+    description: product.description,
+    quality: product.quality,
+    color: product.color,
+    price: product.price,
+    mrp: product.mrp,
+    image: product.image,
+    category: product.category,
+    gsm: product.gsm,
+    size_s: product.sizeStock.S,
+    size_m: product.sizeStock.M,
+    size_l: product.sizeStock.L,
+    size_xl: product.sizeStock.XL,
+    quantity: product.quantity,
+  };
+}

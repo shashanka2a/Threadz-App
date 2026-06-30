@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { mapProductRow, mapProductToUpsert } from "@/lib/db/mappers";
+import { mapProductRow, mapProductToUpdate, mapProductToUpsert } from "@/lib/db/mappers";
 import type { Product } from "@/types/product";
 
 export async function getAdminProducts(): Promise<Product[]> {
@@ -12,13 +12,25 @@ export async function getAdminProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .order("id", { ascending: true });
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
   return (data ?? []).map(mapProductRow);
+}
+
+async function getAllProductIds(): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("products").select("id");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => row.id);
 }
 
 export async function createProduct(product: Product): Promise<Product> {
@@ -36,14 +48,13 @@ export async function createProduct(product: Product): Promise<Product> {
 
 export async function updateProduct(id: string, product: Product): Promise<Product> {
   const supabase = createAdminClient();
-  const row = mapProductToUpsert(product);
-
-  const { id: _productId, ...updateRow } = row;
+  const row = mapProductToUpdate(product);
 
   const { data, error } = await supabase
     .from("products")
-    .update(updateRow)
+    .update(row)
     .eq("id", id)
+    .eq("is_active", true)
     .select()
     .single();
 
@@ -64,9 +75,9 @@ export async function deactivateProduct(id: string): Promise<void> {
 }
 
 export async function getNextProductId(): Promise<string> {
-  const products = await getAdminProducts();
-  const maxId = products.reduce((max, product) => {
-    const numeric = parseInt(product.id, 10);
+  const ids = await getAllProductIds();
+  const maxId = ids.reduce((max, id) => {
+    const numeric = parseInt(id, 10);
     return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
   }, 0);
   return String(maxId + 1);

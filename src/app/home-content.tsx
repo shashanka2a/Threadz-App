@@ -7,6 +7,7 @@ import { ProductRating } from "@/components/product-rating";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProductImage } from "@/components/product-image";
+import { ProductStockBadgeRow } from "@/components/product/product-stock-badges";
 import type { Product } from "@/types/product";
 
 type HomeContentProps = {
@@ -90,6 +91,7 @@ export default function HomeContent({ products }: HomeContentProps) {
                       <Badge variant="outline" className="rounded-none text-[10px]">
                         {product.category}
                       </Badge>
+                      <ProductStockBadgeRow product={product} />
                     </div>
                     <ProductRating className="mb-1" />
                     <h3 className="font-medium mb-1 text-card-foreground">{product.name}</h3>

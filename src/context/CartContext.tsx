@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { CartItem, Product } from "../types/product";
+import { canAddToCart, getSizeStock } from "@/lib/stock";
 
 export type ShippingAddress = {
   fullName: string;
@@ -17,10 +18,11 @@ export type ShippingAddress = {
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, size: string, quantity: number) => void;
+  addToCart: (product: Product, size: string, quantity: number) => boolean;
   removeFromCart: (id: string, size: string) => void;
-  updateQuantity: (id: string, size: string, quantity: number) => void;
+  updateQuantity: (id: string, size: string, quantity: number) => boolean;
   clearCart: () => void;
+  syncCartStock: (products: Product[]) => void;
   shippingAddress: ShippingAddress | null;
   setShippingAddress: (address: ShippingAddress) => void;
   clearShippingAddress: () => void;
@@ -72,11 +74,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [deliveryFee]);
 
-  const addToCart = (product: Product, size: string, quantity: number) => {
+  const addToCart = (product: Product, size: string, quantity: number): boolean => {
+    let added = false;
+
     setCartItems((prev) => {
       const existingItem = prev.find(
         (item) => item.id === product.id && item.selectedSize === size
       );
+      const alreadyInCart = existingItem?.cartQuantity ?? 0;
+      const check = canAddToCart(product, size, quantity, alreadyInCart);
+
+      if (!check.ok) {
+        return prev;
+      }
+
+      added = true;
 
       if (existingItem) {
         return prev.map((item) =>
@@ -91,6 +103,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         { ...product, selectedSize: size, cartQuantity: quantity },
       ];
     });
+
+    return added;
   };
 
   const removeFromCart = (id: string, size: string) => {
@@ -99,19 +113,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const updateQuantity = (id: string, size: string, quantity: number) => {
+  const updateQuantity = (id: string, size: string, quantity: number): boolean => {
     if (quantity <= 0) {
       removeFromCart(id, size);
-      return;
+      return true;
     }
 
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id && item.selectedSize === size
-          ? { ...item, cartQuantity: quantity }
-          : item
-      )
-    );
+    let updated = false;
+
+    setCartItems((prev) => {
+      const item = prev.find(
+        (cartItem) => cartItem.id === id && cartItem.selectedSize === size
+      );
+      if (!item) return prev;
+
+      const maxQty = getSizeStock(item, size);
+      if (quantity > maxQty) {
+        return prev;
+      }
+
+      updated = true;
+      return prev.map((cartItem) =>
+        cartItem.id === id && cartItem.selectedSize === size
+          ? { ...cartItem, cartQuantity: quantity }
+          : cartItem
+      );
+    });
+
+    return updated;
   };
 
   const clearCart = () => {
@@ -123,6 +152,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // ignore
     }
   };
+
+  const syncCartStock = useCallback((products: Product[]) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
+        const live = products.find((product) => product.id === item.id);
+        if (!live) {
+          return {
+            ...item,
+            quantity: 0,
+            sizeStock: { S: 0, M: 0, L: 0, XL: 0 },
+          };
+        }
+
+        return {
+          ...item,
+          name: live.name,
+          price: live.price,
+          mrp: live.mrp,
+          image: live.image,
+          quantity: live.quantity,
+          sizeStock: live.sizeStock,
+        };
+      })
+    );
+  }, []);
 
   const setShippingAddress = (address: ShippingAddress) => {
     setShippingAddressState(address);
@@ -156,6 +210,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        syncCartStock,
         shippingAddress,
         setShippingAddress,
         clearShippingAddress,

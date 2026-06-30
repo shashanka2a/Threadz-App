@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStockStatus } from "@/data/products";
+import { canAddToCart, isProductSoldOut } from "@/lib/stock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,19 +35,34 @@ export default function ProductDetailContent({
   allProducts,
 }: ProductDetailContentProps) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState(product.color);
 
+  const soldOut = isProductSoldOut(product);
+
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast.error("Please select a size");
+    const existing = cartItems.find(
+      (item) => item.id === product.id && item.selectedSize === selectedSize
+    );
+    const check = canAddToCart(
+      product,
+      selectedSize,
+      1,
+      existing?.cartQuantity ?? 0
+    );
+
+    if (!check.ok) {
+      toast.error(check.message);
       return;
     }
 
-    addToCart(product, selectedSize, 1);
-    toast.success("Added to cart");
+    if (addToCart(product, selectedSize, 1)) {
+      toast.success("Added to cart");
+    } else {
+      toast.error("Could not add to cart");
+    }
   };
 
   const colorVariants = allProducts.filter((p) => p.quality === product.quality);
@@ -204,9 +220,10 @@ export default function ProductDetailContent({
           <Button
             size="lg"
             onClick={handleAddToCart}
-            className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-none mb-6"
+            disabled={soldOut}
+            className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-none mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add to Cart
+            {soldOut ? "Out of Stock" : "Add to Cart"}
           </Button>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 pb-6 border-b border-neutral-200">

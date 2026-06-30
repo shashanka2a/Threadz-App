@@ -61,8 +61,11 @@ export function getProductsByCategory(category: string): Product[] {
   return staticProducts.filter((p) => p.category === category);
 }
 
-export function getStockStatus(count: number): "in-stock" | "low-stock" | "out-of-stock" {
-  if (count === 0) return "out-of-stock";
-  if (count < 5) return "low-stock";
-  return "in-stock";
-}
+export {
+  getStockStatus,
+  isProductSoldOut,
+  hasLowStock,
+  canAddToCart,
+  getSizeStock,
+  maxAddableQuantity,
+} from "@/lib/stock";
