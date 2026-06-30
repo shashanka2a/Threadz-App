@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       shippingCost: estimate.estimatedCost,
       weightGrams,
       labelData: label.raw as Record<string, unknown> | undefined,
-      pickupLocation: process.env.DELHIVERY_PICKUP_LOCATION ?? "Primary",
+      pickupLocation: process.env.DELHIVERY_PICKUP_LOCATION ?? "kandukya",
     });
 
     await updateOrderShippingCost(orderId, estimate.estimatedCost, "shipped");

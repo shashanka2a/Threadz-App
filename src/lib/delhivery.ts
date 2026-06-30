@@ -213,7 +213,7 @@ export async function createShipment(
   payload: CreateShipmentPayload
 ): Promise<CreateShipmentResult> {
   const pickupLocation =
-    process.env.DELHIVERY_PICKUP_LOCATION?.trim() || "Primary";
+    process.env.DELHIVERY_PICKUP_LOCATION?.trim() || "kandukya";
   const clientName =
     process.env.DELHIVERY_CLIENT_NAME?.trim() || "THREADZ";
   const sellerGst =
@@ -465,4 +465,185 @@ export function estimateOrderWeightGrams(itemCount: number): number {
 
 export function delhiveryConfigured(): boolean {
   return !isMockMode();
+}
+
+export type WarehouseConfig = {
+  name: string;
+  registeredName: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  pin: string;
+  country: string;
+};
+
+export function getWarehouseConfigFromEnv(): WarehouseConfig {
+  const pin =
+    normalizePincode(process.env.DELHIVERY_ORIGIN_PINCODE ?? "501401") ||
+    "501401";
+  const address =
+    process.env.DELHIVERY_WAREHOUSE_ADDRESS?.trim() ||
+    "plot no 101, metro land mark, beside country club, medchal";
+  const city = process.env.DELHIVERY_WAREHOUSE_CITY?.trim() || "Hyderabad";
+  const state = process.env.DELHIVERY_WAREHOUSE_STATE?.trim() || "Telangana";
+
+  return {
+    name: process.env.DELHIVERY_PICKUP_LOCATION?.trim() || "kandukya",
+    registeredName:
+      process.env.DELHIVERY_REGISTERED_NAME?.trim() || "Threadz Studio",
+    contactPerson:
+      process.env.DELHIVERY_CONTACT_NAME?.trim() || "K Sai Sharath Chandra",
+    phone: (process.env.DELHIVERY_WAREHOUSE_PHONE ?? "9908552300").replace(
+      /\D/g,
+      ""
+    ).slice(-10),
+    email:
+      process.env.DELHIVERY_WAREHOUSE_EMAIL?.trim() ||
+      "support.threadzstudio@gmail.com",
+    address,
+    city,
+    state,
+    pin,
+    country: "India",
+  };
+}
+
+function warehousePayload(config: WarehouseConfig) {
+  return {
+    name: config.name,
+    registered_name: config.registeredName,
+    contact_person: config.contactPerson,
+    phone: config.phone,
+    email: config.email,
+    address: config.address,
+    city: config.city,
+    pin: config.pin,
+    state: config.state,
+    country: config.country,
+    return_address: config.address,
+    return_pin: config.pin,
+    return_city: config.city,
+    return_state: config.state,
+    return_country: config.country,
+  };
+}
+
+export type WarehouseRegisterResult = {
+  success: boolean;
+  action: "created" | "updated" | "mock";
+  message?: string;
+  raw?: unknown;
+  error?: string;
+};
+
+export async function createWarehouse(
+  config?: WarehouseConfig
+): Promise<WarehouseRegisterResult> {
+  const warehouse = config ?? getWarehouseConfigFromEnv();
+
+  if (isMockMode()) {
+    return {
+      success: true,
+      action: "mock",
+      message: "Mock warehouse registered",
+      raw: warehouse,
+    };
+  }
+
+  const res = await delhiveryFetch("/api/backend/clientwarehouse/create/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(warehousePayload(warehouse)),
+  });
+
+  const data = (await res.json()) as {
+    success?: boolean;
+    data?: { message?: string; name?: string };
+    error?: string | string[];
+    error_code?: number[];
+  };
+
+  const errorText = Array.isArray(data.error)
+    ? data.error.join(", ")
+    : data.error;
+  const alreadyExists =
+    typeof errorText === "string" &&
+    errorText.toLowerCase().includes("already exists");
+
+  if (data.success) {
+    return {
+      success: true,
+      action: "created",
+      message: data.data?.message ?? "Warehouse created",
+      raw: data,
+    };
+  }
+
+  if (alreadyExists) {
+    return updateWarehouse(warehouse);
+  }
+
+  return {
+    success: false,
+    action: "created",
+    error: errorText ?? data.data?.message ?? "Warehouse creation failed",
+    raw: data,
+  };
+}
+
+export async function updateWarehouse(
+  config?: WarehouseConfig
+): Promise<WarehouseRegisterResult> {
+  const warehouse = config ?? getWarehouseConfigFromEnv();
+
+  if (isMockMode()) {
+    return {
+      success: true,
+      action: "mock",
+      message: "Mock warehouse updated",
+      raw: warehouse,
+    };
+  }
+
+  const res = await delhiveryFetch("/api/backend/clientwarehouse/edit/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(warehousePayload(warehouse)),
+  });
+
+  const data = (await res.json()) as {
+    success?: boolean;
+    data?: { message?: string; name?: string; active?: boolean };
+    error?: string | string[];
+  };
+
+  const errorText = Array.isArray(data.error)
+    ? data.error.join(", ")
+    : data.error;
+
+  if (data.success) {
+    return {
+      success: true,
+      action: "updated",
+      message: data.data?.message ?? "Warehouse updated",
+      raw: data,
+    };
+  }
+
+  return {
+    success: false,
+    action: "updated",
+    error: errorText ?? "Warehouse update failed",
+    raw: data,
+  };
+}
+
+/** Create warehouse, or update if it already exists in Delhivery. */
+export async function registerWarehouse(
+  config?: WarehouseConfig
+): Promise<WarehouseRegisterResult> {
+  return createWarehouse(config);
 }
