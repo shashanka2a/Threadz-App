@@ -14,9 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, LogOut, MapPin, Plus, Trash2 } from "lucide-react";
+import { Loader2, LogOut, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { MyOrders } from "@/components/customer/my-orders";
 import { createClient } from "@/lib/supabase/client";
 import type { SavedAddress } from "@/lib/addresses";
 
@@ -245,6 +246,21 @@ export default function ProfilePage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border-neutral-200 rounded-none">
+          <CardContent className="p-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                My orders
+              </h2>
+              <p className="text-sm text-neutral-600">
+                Track shipments, download labels, and manage deliveries.
+              </p>
+            </div>
+            <MyOrders />
           </CardContent>
         </Card>
 

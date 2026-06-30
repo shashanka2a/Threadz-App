@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { OrderItemRow, OrderRow } from "@/lib/supabase/database.types";
+import type { ShipmentRecord } from "@/types/shipment";
+import { getShipmentsByOrderIds } from "@/lib/db/shipments";
 
 export type AdminOrderItem = {
   id: string;
@@ -27,13 +29,19 @@ export type AdminOrder = {
   paymentMethod: string;
   subtotal: number;
   tax: number;
+  shippingCost: number;
   total: number;
   status: string;
   createdAt: string;
   items: AdminOrderItem[];
+  shipment: ShipmentRecord | null;
 };
 
-function mapOrderRow(row: OrderRow, items: OrderItemRow[]): AdminOrder {
+function mapOrderRow(
+  row: OrderRow,
+  items: OrderItemRow[],
+  shipment: ShipmentRecord | null
+): AdminOrder {
   return {
     id: row.id,
     fullName: row.full_name,
@@ -48,6 +56,7 @@ function mapOrderRow(row: OrderRow, items: OrderItemRow[]): AdminOrder {
     paymentMethod: row.payment_method,
     subtotal: Number(row.subtotal),
     tax: Number(row.tax),
+    shippingCost: Number(row.shipping_cost ?? 0),
     total: Number(row.total),
     status: row.status,
     createdAt: row.created_at,
@@ -61,6 +70,7 @@ function mapOrderRow(row: OrderRow, items: OrderItemRow[]): AdminOrder {
       unitPrice: Number(item.unit_price),
       lineTotal: Number(item.line_total),
     })),
+    shipment,
   };
 }
 
@@ -89,9 +99,12 @@ export async function getAdminOrders(): Promise<AdminOrder[]> {
     .select("*")
     .in("order_id", orderIds);
 
-  if (itemsError) {
+    if (itemsError) {
     console.warn("[getAdminOrders] items:", itemsError.message);
-    return orders.map((order) => mapOrderRow(order, []));
+    const shipmentsByOrder = await getShipmentsByOrderIds(orderIds);
+    return orders.map((order) =>
+      mapOrderRow(order, [], shipmentsByOrder[order.id] ?? null)
+    );
   }
 
   const itemsByOrder = (items ?? []).reduce<Record<string, OrderItemRow[]>>((acc, item) => {
@@ -100,5 +113,9 @@ export async function getAdminOrders(): Promise<AdminOrder[]> {
     return acc;
   }, {});
 
-  return orders.map((order) => mapOrderRow(order, itemsByOrder[order.id] ?? []));
+  const shipmentsByOrder = await getShipmentsByOrderIds(orderIds);
+
+  return orders.map((order) =>
+    mapOrderRow(order, itemsByOrder[order.id] ?? [], shipmentsByOrder[order.id] ?? null)
+  );
 }

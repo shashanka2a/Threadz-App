@@ -21,6 +21,7 @@ import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { ProductImage } from "@/components/product-image";
 import { ProductRating } from "@/components/product-rating";
 import { KeyHighlights } from "@/components/product/key-highlights";
+import { PincodeChecker } from "@/components/shipping/pincode-checker";
 import type { Product } from "@/types/product";
 
 type ProductDetailContentProps = {
@@ -230,6 +231,10 @@ export default function ProductDetailContent({
                 <p className="text-xs">RETURNS</p>
               </div>
             </div>
+          </div>
+
+          <div className="mb-6">
+            <PincodeChecker />
           </div>
 
           <KeyHighlights imageSrc={product.image} />

@@ -90,7 +90,7 @@ export default function OrdersPage() {
           </TabsContent>
 
           <TabsContent value="orders">
-            <OrdersTable orders={orders} />
+            <OrdersTable orders={orders} onRefresh={loadOrders} />
           </TabsContent>
         </Tabs>
       )}

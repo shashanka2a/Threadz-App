@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PincodeChecker } from "@/components/shipping/pincode-checker";
+import type { PincodeServiceability, ShippingEstimate } from "@/types/shipment";
 
 const DEFAULT_COUNTRY = "India";
 
@@ -27,6 +29,9 @@ export default function ShippingPage() {
   const [isCheckingCart, setIsCheckingCart] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
+  const [shippingEstimate, setShippingEstimate] = useState<ShippingEstimate | null>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -94,7 +99,39 @@ export default function ShippingPage() {
 
   const setField = (k: keyof ShippingAddress, v: string) => {
     setForm((prev) => ({ ...prev, [k]: v }));
+    if (k === "postalCode") {
+      setPincodeResult(null);
+      setShippingEstimate(null);
+    }
   };
+
+  const itemCount = cartItems.reduce((sum, item) => sum + item.cartQuantity, 0);
+  const weightGrams = Math.max(250, itemCount * 250);
+
+  useEffect(() => {
+    const pin = form.postalCode.replace(/\D/g, "").slice(0, 6);
+    if (pin.length !== 6) {
+      setShippingEstimate(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setEstimateLoading(true);
+      try {
+        const res = await fetch(
+          `/api/shipping/estimate?pin=${encodeURIComponent(pin)}&weight=${weightGrams}`
+        );
+        const data = (await res.json()) as ShippingEstimate;
+        if (res.ok) setShippingEstimate(data);
+      } catch {
+        setShippingEstimate(null);
+      } finally {
+        setEstimateLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [form.postalCode, weightGrams]);
 
   const validate = () => {
     if (!form.fullName.trim()) return "Full name is required";
@@ -105,6 +142,9 @@ export default function ShippingPage() {
     if (!form.state.trim()) return "State is required";
     if (!form.postalCode.trim()) return "Postal code is required";
     if (!form.country.trim()) return "Country is required";
+    if (pincodeResult && !pincodeResult.serviceable) {
+      return "Delivery is not available for this pincode";
+    }
     return null;
   };
 
@@ -265,6 +305,29 @@ export default function ShippingPage() {
                     className={checkoutInputClass}
                     placeholder="400001"
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <PincodeChecker
+                    compact
+                    defaultPin={form.postalCode}
+                    onResult={setPincodeResult}
+                  />
+                  {estimateLoading && (
+                    <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Estimating shipping...
+                    </p>
+                  )}
+                  {shippingEstimate && shippingEstimate.estimatedCost >= 0 && (
+                    <p className="text-sm text-neutral-700 mt-2">
+                      Estimated Delhivery shipping: ₹{shippingEstimate.estimatedCost}
+                      {shippingEstimate.note && (
+                        <span className="block text-xs text-neutral-500">
+                          {shippingEstimate.note}
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 <div>

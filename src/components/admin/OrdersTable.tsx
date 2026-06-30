@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/table";
 import { ChevronDown, ChevronUp, Download, Search } from "lucide-react";
 import type { AdminOrder } from "@/lib/db/admin-orders";
+import { ShipmentPanel } from "@/components/admin/shipment-panel";
 
 type OrdersTableProps = {
   orders: AdminOrder[];
+  onRefresh?: () => void;
 };
 
 function formatAddress(order: AdminOrder) {
@@ -47,7 +49,7 @@ function formatDate(iso: string) {
   });
 }
 
-export function OrdersTable({ orders }: OrdersTableProps) {
+export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPayment, setFilterPayment] = useState("All");
@@ -242,9 +244,20 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                                   <p className="font-medium mb-1">Order totals</p>
                                   <p className="text-neutral-600">Subtotal: ₹{order.subtotal}</p>
                                   <p className="text-neutral-600">Tax: ₹{order.tax}</p>
+                                  {order.shippingCost > 0 && (
+                                    <p className="text-neutral-600">
+                                      Shipping: ₹{order.shippingCost}
+                                    </p>
+                                  )}
                                   <p className="text-neutral-600 font-medium">Total: ₹{order.total}</p>
                                 </div>
                               </div>
+
+                              <ShipmentPanel
+                                order={order}
+                                shipment={order.shipment}
+                                onUpdated={() => onRefresh?.()}
+                              />
 
                               <div>
                                 <p className="font-medium mb-2 text-sm">Line items</p>

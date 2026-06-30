@@ -125,6 +125,7 @@ export interface Database {
           payment_method: string;
           subtotal: number;
           tax: number;
+          shipping_cost: number | null;
           total: number;
           status: string;
           created_at: string;
@@ -144,6 +145,7 @@ export interface Database {
           payment_method: string;
           subtotal: number;
           tax: number;
+          shipping_cost?: number | null;
           total: number;
           status?: string;
           created_at?: string;
@@ -163,6 +165,7 @@ export interface Database {
           payment_method?: string;
           subtotal?: number;
           tax?: number;
+          shipping_cost?: number | null;
           total?: number;
           status?: string;
           created_at?: string;
@@ -298,6 +301,65 @@ export interface Database {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      shipments: {
+        Row: {
+          id: string;
+          order_id: string;
+          waybill: string | null;
+          delhivery_status: string;
+          payment_mode: string;
+          shipping_cost: number | null;
+          weight_grams: number;
+          label_data: Record<string, unknown> | null;
+          tracking_status: string | null;
+          tracking_data: Record<string, unknown> | null;
+          pickup_location: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          waybill?: string | null;
+          delhivery_status?: string;
+          payment_mode?: string;
+          shipping_cost?: number | null;
+          weight_grams?: number;
+          label_data?: Record<string, unknown> | null;
+          tracking_status?: string | null;
+          tracking_data?: Record<string, unknown> | null;
+          pickup_location?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          waybill?: string | null;
+          delhivery_status?: string;
+          payment_mode?: string;
+          shipping_cost?: number | null;
+          weight_grams?: number;
+          label_data?: Record<string, unknown> | null;
+          tracking_status?: string | null;
+          tracking_data?: Record<string, unknown> | null;
+          pickup_location?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
             referencedColumns: ["id"];
           },
         ];
