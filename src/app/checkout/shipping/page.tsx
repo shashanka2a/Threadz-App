@@ -24,7 +24,7 @@ const checkoutInputClass =
 
 export default function ShippingPage() {
   const router = useRouter();
-  const { cartItems, shippingAddress, setShippingAddress } = useCart();
+  const { cartItems, shippingAddress, setShippingAddress, setDeliveryFee } = useCart();
   const { user, profile, addresses, loading: authLoading } = useAuth();
   const [isCheckingCart, setIsCheckingCart] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,6 +102,7 @@ export default function ShippingPage() {
     if (k === "postalCode") {
       setPincodeResult(null);
       setShippingEstimate(null);
+      setDeliveryFee(0);
     }
   };
 
@@ -122,16 +123,23 @@ export default function ShippingPage() {
           `/api/shipping/estimate?pin=${encodeURIComponent(pin)}&weight=${weightGrams}`
         );
         const data = (await res.json()) as ShippingEstimate;
-        if (res.ok) setShippingEstimate(data);
+        if (res.ok) {
+          setShippingEstimate(data);
+          setDeliveryFee(data.estimatedCost);
+        } else {
+          setShippingEstimate(null);
+          setDeliveryFee(0);
+        }
       } catch {
         setShippingEstimate(null);
+        setDeliveryFee(0);
       } finally {
         setEstimateLoading(false);
       }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [form.postalCode, weightGrams]);
+  }, [form.postalCode, weightGrams, setDeliveryFee]);
 
   const validate = () => {
     if (!form.fullName.trim()) return "Full name is required";
@@ -145,6 +153,13 @@ export default function ShippingPage() {
     if (pincodeResult && !pincodeResult.serviceable) {
       return "Delivery is not available for this pincode";
     }
+    const pin = form.postalCode.replace(/\D/g, "").slice(0, 6);
+    if (pin.length === 6 && estimateLoading) {
+      return "Calculating delivery fee, please wait";
+    }
+    if (pin.length === 6 && !shippingEstimate) {
+      return "Could not calculate delivery fee for this pincode";
+    }
     return null;
   };
 
@@ -157,6 +172,9 @@ export default function ShippingPage() {
 
     setIsSubmitting(true);
     setShippingAddress(form);
+    if (shippingEstimate) {
+      setDeliveryFee(shippingEstimate.estimatedCost);
+    }
     await new Promise((resolve) => setTimeout(resolve, 600));
     router.push("/checkout/payment");
   };
@@ -319,20 +337,17 @@ export default function ShippingPage() {
                   {estimateLoading && (
                     <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1.5">
                       <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                      Estimating shipping cost...
+                      Calculating your free delivery savings...
                     </p>
                   )}
-                  {shippingEstimate && shippingEstimate.estimatedCost >= 0 && (
-                    <p className="text-sm text-neutral-700 mt-2">
-                      Estimated shipping:{" "}
-                      <span className="font-medium">
+                  {shippingEstimate && shippingEstimate.estimatedCost > 0 && (
+                    <p className="text-sm mt-2 text-green-800 bg-green-50 border border-green-200 px-3 py-2">
+                      <span className="font-medium">Free delivery unlocked!</span>{" "}
+                      Save{" "}
+                      <span className="line-through text-neutral-500">
                         ₹{shippingEstimate.estimatedCost}
-                      </span>
-                      {shippingEstimate.note && (
-                        <span className="block text-xs text-neutral-500 mt-0.5">
-                          {shippingEstimate.note}
-                        </span>
-                      )}
+                      </span>{" "}
+                      — delivery fee waived at checkout.
                     </p>
                   )}
                 </div>
@@ -378,7 +393,7 @@ export default function ShippingPage() {
 
         <div>
           <div className="lg:sticky lg:top-20">
-            <OrderSummary />
+            <OrderSummary deliveryLoading={estimateLoading} />
           </div>
         </div>
       </div>

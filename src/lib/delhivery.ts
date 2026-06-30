@@ -136,8 +136,8 @@ export async function estimateShippingCost(params: {
 }): Promise<ShippingEstimate> {
   const dPin = normalizePincode(params.destinationPin);
   const oPin =
-    normalizePincode(process.env.DELHIVERY_ORIGIN_PINCODE ?? "110001") ||
-    "110001";
+    normalizePincode(process.env.DELHIVERY_ORIGIN_PINCODE ?? "501401") ||
+    "501401";
   const weight = Math.max(100, params.weightGrams);
   const ss = params.paymentMode === "COD" ? "COD" : "Prepaid";
 

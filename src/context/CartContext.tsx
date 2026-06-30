@@ -24,6 +24,8 @@ interface CartContextType {
   shippingAddress: ShippingAddress | null;
   setShippingAddress: (address: ShippingAddress) => void;
   clearShippingAddress: () => void;
+  deliveryFee: number;
+  setDeliveryFee: (fee: number) => void;
   cartCount: number;
   cartTotal: number;
 }
@@ -31,16 +33,20 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const STORAGE_KEY = "threadz.checkout.shippingAddress";
+const DELIVERY_FEE_KEY = "threadz.checkout.deliveryFee";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [shippingAddress, setShippingAddressState] =
     useState<ShippingAddress | null>(null);
+  const [deliveryFee, setDeliveryFeeState] = useState(0);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setShippingAddressState(JSON.parse(raw) as ShippingAddress);
+      const feeRaw = localStorage.getItem(DELIVERY_FEE_KEY);
+      if (feeRaw) setDeliveryFeeState(Number(feeRaw) || 0);
     } catch {
       // ignore
     }
@@ -57,6 +63,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // ignore
     }
   }, [shippingAddress]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DELIVERY_FEE_KEY, String(deliveryFee));
+    } catch {
+      // ignore
+    }
+  }, [deliveryFee]);
 
   const addToCart = (product: Product, size: string, quantity: number) => {
     setCartItems((prev) => {
@@ -102,6 +116,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setDeliveryFeeState(0);
+    try {
+      localStorage.removeItem(DELIVERY_FEE_KEY);
+    } catch {
+      // ignore
+    }
   };
 
   const setShippingAddress = (address: ShippingAddress) => {
@@ -110,6 +130,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearShippingAddress = () => {
     setShippingAddressState(null);
+    setDeliveryFeeState(0);
+    try {
+      localStorage.removeItem(DELIVERY_FEE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const setDeliveryFee = (fee: number) => {
+    setDeliveryFeeState(Math.max(0, Math.round(fee)));
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.cartQuantity, 0);
@@ -129,6 +159,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         shippingAddress,
         setShippingAddress,
         clearShippingAddress,
+        deliveryFee,
+        setDeliveryFee,
         cartCount,
         cartTotal,
       }}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { computeCheckoutTotals } from "@/lib/pricing";
 
 type RazorpayCheckout = new (options: Record<string, unknown>) => { open: () => void };
 
@@ -30,7 +31,8 @@ function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["ship
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { cartItems, cartTotal, shippingAddress, clearCart, clearShippingAddress } = useCart();
+  const { cartItems, cartTotal, shippingAddress, deliveryFee, clearCart, clearShippingAddress } =
+    useCart();
   const [isChecking, setIsChecking] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
@@ -51,8 +53,10 @@ export default function PaymentPage() {
     return `TZ-${now.slice(-8)}`;
   }, []);
 
-  const tax = useMemo(() => Math.round(cartTotal * 0.18), [cartTotal]);
-  const total = cartTotal + tax;
+  const { subtotal, tax, total, quotedDelivery } = useMemo(
+    () => computeCheckoutTotals(cartTotal, deliveryFee),
+    [cartTotal, deliveryFee],
+  );
 
   const payAndProceed = async () => {
     if (!shippingAddress) return;
@@ -133,8 +137,9 @@ export default function PaymentPage() {
                 shippingAddress,
                 paymentMethod: "razorpay",
                 cartItems,
-                subtotal: cartTotal,
+                subtotal,
                 tax,
+                shippingCost: quotedDelivery,
                 total,
               }),
             });

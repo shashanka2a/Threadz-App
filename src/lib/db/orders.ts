@@ -10,6 +10,7 @@ export type CreateOrderInput = {
   cartItems: CartItem[];
   subtotal: number;
   tax: number;
+  shippingCost?: number;
   total: number;
 };
 
@@ -34,6 +35,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ orderId: s
     payment_method: input.paymentMethod,
     subtotal: input.subtotal,
     tax: input.tax,
+    shipping_cost: input.shippingCost ?? 0,
     total: input.total,
     status: "confirmed",
   });

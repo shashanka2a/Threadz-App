@@ -220,8 +220,8 @@ export default function ProductDetailContent({
             <div className="flex items-center gap-2">
               <Truck className="h-5 w-5 text-neutral-600" />
               <div>
-                <p className="text-xs">FREE</p>
-                <p className="text-xs">SHIPPING</p>
+                <p className="text-xs">PAN INDIA</p>
+                <p className="text-xs">DELIVERY</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

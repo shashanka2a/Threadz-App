@@ -10,10 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Loader2, Trash2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { CheckoutProgress } from "@/components/checkout/checkout-progress";
+import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 
 export default function CartPage() {
   const router = useRouter();
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+  const { tax, total } = computeCheckoutTotals(cartTotal);
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -161,23 +163,20 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>₹{cartTotal}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Shipping</span>
-                  <span className="text-green-600">FREE</span>
+                  <span>{formatInr(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-neutral-600">
-                  <span>Tax (estimated)</span>
-                  <span>₹{Math.round(cartTotal * 0.18)}</span>
+                  <span>GST (18%, included)</span>
+                  <span>{formatInr(tax)}</span>
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="flex justify-between text-lg">
+                <div className="flex justify-between text-lg font-medium">
                   <span>Total</span>
-                  <span>₹{cartTotal + Math.round(cartTotal * 0.18)}</span>
+                  <span>{formatInr(total)}</span>
                 </div>
+                <p className="text-xs text-neutral-500">All prices inclusive of taxes</p>
               </div>
 
               <Button
@@ -198,7 +197,7 @@ export default function CartPage() {
 
               <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200">
                 <p className="text-xs text-neutral-600">
-                  • Free shipping on all orders
+                  • Free delivery applied at checkout
                   <br />
                   • 7-day return policy
                   <br />• Secure payment processing

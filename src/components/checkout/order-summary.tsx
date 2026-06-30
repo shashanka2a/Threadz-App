@@ -4,21 +4,26 @@ import { useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
+import { computeCheckoutTotals, formatInr, WAREHOUSE_PINCODE } from "@/lib/pricing";
 
 type OrderSummaryProps = {
   title?: string;
-  showShippingLine?: boolean;
+  deliveryLoading?: boolean;
 };
 
 export function OrderSummary({
   title = "Order Summary",
-  showShippingLine = true,
+  deliveryLoading = false,
 }: OrderSummaryProps) {
-  const { cartTotal, cartItems } = useCart();
+  const { cartTotal, cartItems, deliveryFee } = useCart();
 
-  const tax = useMemo(() => Math.round(cartTotal * 0.18), [cartTotal]);
-  const shipping = 0;
-  const total = cartTotal + tax + shipping;
+  const { tax, total, quotedDelivery, deliveryDiscount } = useMemo(
+    () => computeCheckoutTotals(cartTotal, deliveryFee),
+    [cartTotal, deliveryFee],
+  );
+
+  const showDeliveryPromo = deliveryLoading || quotedDelivery > 0;
 
   return (
     <Card className="border-neutral-200 rounded-none">
@@ -32,29 +37,58 @@ export function OrderSummary({
           </div>
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>
-            <span>₹{cartTotal}</span>
+            <span>{formatInr(cartTotal)}</span>
           </div>
-          {showShippingLine && (
-            <div className="flex justify-between text-sm">
-              <span>Shipping</span>
-              <span className="text-green-600">{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
-            </div>
+
+          {showDeliveryPromo && (
+            <>
+              <div className="flex justify-between text-sm gap-4">
+                <span>Delivery fee</span>
+                <span className="text-right shrink-0">
+                  {deliveryLoading ? (
+                    <span className="inline-flex items-center gap-1.5 text-neutral-500">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Calculating...
+                    </span>
+                  ) : (
+                    <span className="text-neutral-400 line-through tabular-nums">
+                      {formatInr(quotedDelivery)}
+                    </span>
+                  )}
+                </span>
+              </div>
+              {!deliveryLoading && deliveryDiscount > 0 && (
+                <div className="flex justify-between text-sm gap-4 text-green-700">
+                  <span>Free delivery discount</span>
+                  <span className="font-medium tabular-nums shrink-0">
+                    −{formatInr(deliveryDiscount)}
+                  </span>
+                </div>
+              )}
+            </>
           )}
+
           <div className="flex justify-between text-sm text-neutral-600">
-            <span>Tax (estimated)</span>
-            <span>₹{tax}</span>
+            <span>GST (18%, included)</span>
+            <span>{formatInr(tax)}</span>
           </div>
 
           <Separator className="my-4" />
 
-          <div className="flex justify-between text-lg">
+          <div className="flex justify-between text-lg font-medium">
             <span>Total</span>
-            <span>₹{total}</span>
+            <span>{formatInr(total)}</span>
           </div>
+          {deliveryDiscount > 0 && (
+            <p className="text-xs text-green-700 font-medium">
+              You save {formatInr(deliveryDiscount)} on delivery
+            </p>
+          )}
+          <p className="text-xs text-neutral-500">All product prices inclusive of taxes</p>
         </div>
 
         <p className="text-xs text-neutral-600">
-          • Free shipping on all orders
+          • Free delivery from warehouse ({WAREHOUSE_PINCODE})
           <br />
           • 7-day return policy
           <br />• Secure payment processing
@@ -63,4 +97,3 @@ export function OrderSummary({
     </Card>
   );
 }
-
