@@ -307,22 +307,29 @@ export default function ShippingPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 border-t border-neutral-200 pt-4 mt-1">
+                  <p className="text-sm font-medium text-neutral-900 mb-3">
+                    Delivery availability
+                  </p>
                   <PincodeChecker
                     compact
                     defaultPin={form.postalCode}
                     onResult={setPincodeResult}
                   />
                   {estimateLoading && (
-                    <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Estimating shipping...
+                    <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1.5">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                      Estimating shipping cost...
                     </p>
                   )}
                   {shippingEstimate && shippingEstimate.estimatedCost >= 0 && (
                     <p className="text-sm text-neutral-700 mt-2">
-                      Estimated Delhivery shipping: ₹{shippingEstimate.estimatedCost}
+                      Estimated shipping:{" "}
+                      <span className="font-medium">
+                        ₹{shippingEstimate.estimatedCost}
+                      </span>
                       {shippingEstimate.note && (
-                        <span className="block text-xs text-neutral-500">
+                        <span className="block text-xs text-neutral-500 mt-0.5">
                           {shippingEstimate.note}
                         </span>
                       )}

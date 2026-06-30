@@ -82,7 +82,15 @@ export async function checkPincodeServiceability(
   );
   const data = (await res.json()) as {
     delivery_codes?: Array<{
-      postal_code?: { pin?: string; city?: string; state_code?: string };
+      postal_code?: {
+        pin?: string | number;
+        city?: string;
+        state_code?: string;
+        pre_paid?: string;
+        cod?: string;
+        pickup?: string;
+        remarks?: string;
+      };
       pre_paid?: string;
       cod?: string;
       reverse_pickup?: string;
@@ -91,7 +99,8 @@ export async function checkPincodeServiceability(
   };
 
   const entry = data.delivery_codes?.[0];
-  if (!entry?.postal_code?.pin) {
+  const postal = entry?.postal_code;
+  if (!postal?.pin) {
     return {
       pincode: pin,
       serviceable: false,
@@ -102,9 +111,11 @@ export async function checkPincodeServiceability(
     };
   }
 
-  const prepaid = entry.pre_paid === "Y";
-  const cod = entry.cod === "Y";
-  const reversePickup = entry.reverse_pickup === "Y";
+  // Delhivery nests flags under postal_code; older docs show them at root level.
+  const prepaid = (postal.pre_paid ?? entry?.pre_paid) === "Y";
+  const cod = (postal.cod ?? entry?.cod) === "Y";
+  const reversePickup =
+    (postal.pickup ?? entry?.reverse_pickup) === "Y";
 
   return {
     pincode: pin,
@@ -112,9 +123,9 @@ export async function checkPincodeServiceability(
     prepaid,
     cod,
     reversePickup,
-    city: entry.postal_code.city,
-    state: entry.postal_code.state_code,
-    message: entry.remarks,
+    city: postal.city,
+    state: postal.state_code,
+    message: postal.remarks ?? entry?.remarks,
   };
 }
 

@@ -235,6 +235,9 @@ export default function ProductDetailContent({
 
           <div className="mb-6">
             <PincodeChecker />
+            <p className="text-xs text-neutral-500 mt-2">
+              Powered by Delhivery · Enter your area pincode before ordering.
+            </p>
           </div>
 
           <KeyHighlights imageSrc={product.image} />
