@@ -13,17 +13,42 @@ export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .order("id", { ascending: true });
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("[getProducts]", error.message);
-    return [];
+    return staticProducts;
   }
 
-  return (data ?? []).map(mapProductRow);
+  if (!data?.length) {
+    return staticProducts;
+  }
+
+  return data.map(mapProductRow);
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
-  const products = await getProducts();
-  return products.find((product) => product.id === id);
+  if (!isSupabaseConfigured()) {
+    return staticProducts.find((product) => product.id === id);
+  }
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getProductById]", error.message);
+    return staticProducts.find((product) => product.id === id);
+  }
+
+  if (!data) {
+    return staticProducts.find((product) => product.id === id);
+  }
+
+  return mapProductRow(data);
 }

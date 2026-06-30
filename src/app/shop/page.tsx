@@ -3,6 +3,8 @@ import ShopContent from "./shop-content";
 import { getCategories, getShopCategoryNames } from "@/lib/db/categories";
 import { getProducts } from "@/lib/db/products";
 
+export const dynamic = "force-dynamic";
+
 export default async function ShopPage() {
   const [products, categoryRows] = await Promise.all([getProducts(), getCategories()]);
   const shopCategories = getShopCategoryNames(categoryRows);

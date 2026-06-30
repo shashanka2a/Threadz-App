@@ -15,6 +15,7 @@ type HomeContentProps = {
 
 export default function HomeContent({ products }: HomeContentProps) {
   const router = useRouter();
+  // Newest products first (getProducts orders by created_at desc)
   const featuredProducts = products.slice(0, 9);
 
   return (
