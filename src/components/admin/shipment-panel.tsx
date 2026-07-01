@@ -35,7 +35,13 @@ export function ShipmentPanel({ order, shipment, onUpdated }: ShipmentPanelProps
         body: JSON.stringify({ orderId: order.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Create failed");
+      if (!res.ok) {
+        const detail =
+          typeof data.error === "string" && data.error.length > 0
+            ? data.error
+            : "Create failed";
+        throw new Error(detail);
+      }
       toast.success(`Shipment created — AWB ${data.shipment?.waybill ?? ""}`);
       if (data.labelUrl) window.open(data.labelUrl, "_blank", "noopener,noreferrer");
       onUpdated();

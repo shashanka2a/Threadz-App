@@ -44,6 +44,79 @@ function normalizePincode(pin: string): string {
   return pin.replace(/\D/g, "").slice(0, 6);
 }
 
+function formatDelhiveryPaymentMode(mode: "Prepaid" | "COD"): string {
+  return mode === "COD" ? "COD" : "Pre-paid";
+}
+
+function simplifyDelhiveryError(message: string): string {
+  if (/insufficient balance/i.test(message)) {
+    return "Delhivery wallet has insufficient prepaid balance. Top up your Delhivery account in Delhivery One (Billing / Wallet) and try again.";
+  }
+  if (/ClientWarehouse|pickup location|warehouse/i.test(message)) {
+    return `Pickup warehouse not found in Delhivery. Ensure DELHIVERY_PICKUP_LOCATION matches your registered warehouse name exactly, then run: npm run delhivery:sync-warehouse. (${message})`;
+  }
+  return message;
+}
+
+function parseDelhiveryCreateError(
+  data: {
+    success?: boolean;
+    rmk?: string;
+    error?: string;
+    packages?: Array<{ status?: string; remarks?: string[] }>;
+  },
+  pkg?: { status?: string; remarks?: string[] }
+): string {
+  const remarks = pkg?.remarks?.filter(Boolean).join("; ");
+  const raw =
+    remarks ||
+    data.error ||
+    data.rmk ||
+    (pkg?.status ? `Shipment status: ${pkg.status}` : "") ||
+    "Delhivery shipment creation failed";
+
+  return simplifyDelhiveryError(raw);
+}
+
+async function parseDelhiveryJson<T>(res: Response): Promise<T> {
+  const contentType = res.headers.get("content-type") ?? "";
+  const text = await res.text();
+
+  if (!contentType.includes("application/json") && !text.trim().startsWith("{") && !text.trim().startsWith("[")) {
+    throw new Error(
+      `Delhivery API error (${res.status}): unexpected response from server`
+    );
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Delhivery API error (${res.status}): invalid JSON response`);
+  }
+}
+
+async function fetchDelhiveryWaybill(): Promise<string> {
+  const res = await delhiveryFetch("/waybill/api/fetch/json/");
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch Delhivery waybill (${res.status})`);
+  }
+
+  let waybill = text.trim();
+  try {
+    waybill = String(JSON.parse(text)).trim();
+  } catch {
+    waybill = waybill.replace(/^"|"$/g, "");
+  }
+
+  if (!waybill) {
+    throw new Error("Delhivery did not return a waybill number");
+  }
+
+  return waybill;
+}
+
 function mockPincode(pin: string): PincodeServiceability {
   const serviceable = !/^9/.test(pin);
   return {
@@ -264,6 +337,27 @@ export async function createShipment(
     };
   }
 
+  const phone = payload.phone.replace(/\D/g, "").slice(-10);
+  if (phone.length !== 10) {
+    return {
+      success: false,
+      error: "Customer phone must be a valid 10-digit Indian mobile number",
+    };
+  }
+
+  let waybill: string;
+  try {
+    waybill = await fetchDelhiveryWaybill();
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch Delhivery waybill",
+    };
+  }
+
   const shipment = {
     name: payload.name.slice(0, 100),
     add: payload.address.slice(0, 200),
@@ -271,9 +365,9 @@ export async function createShipment(
     city: payload.city,
     state: payload.state,
     country: "India",
-    phone: payload.phone.replace(/\D/g, "").slice(-10),
+    phone,
     order: payload.orderId,
-    payment_mode: payload.paymentMode,
+    payment_mode: formatDelhiveryPaymentMode(payload.paymentMode),
     return_pin: "",
     return_city: "",
     return_phone: "",
@@ -292,11 +386,11 @@ export async function createShipment(
     seller_tin: "",
     seller_gst_tin: sellerGst,
     quantity: payload.quantity,
-    waybill: "",
+    waybill,
     shipment_width: "",
     shipment_height: "",
     weight: String(Math.max(0.1, payload.weightGrams / 1000)),
-    shipping_mode: "Surface",
+    shipping_mode: "Express",
     address_type: "home",
   };
 
@@ -314,27 +408,35 @@ export async function createShipment(
     body: body.toString(),
   });
 
-  const data = (await res.json()) as {
+  const data = await parseDelhiveryJson<{
     success?: boolean;
-    packages?: Array<{ waybill?: string; status?: string; remarks?: string[] }>;
+    upload_wbn?: string;
+    packages?: Array<{
+      waybill?: string;
+      status?: string;
+      remarks?: string[];
+    }>;
     rmk?: string;
     error?: string;
-  };
+  }>(res);
 
   const pkg = data.packages?.[0];
-  if (!data.success && !pkg?.waybill) {
+  const packageFailed = pkg?.status?.toLowerCase() === "fail";
+  const requestFailed = data.success === false || packageFailed;
+
+  if (requestFailed || !pkg?.waybill) {
     return {
       success: false,
-      error: data.rmk || data.error || pkg?.remarks?.join(", ") || "Create failed",
+      error: parseDelhiveryCreateError(data, pkg),
       raw: data,
     };
   }
 
   return {
     success: true,
-    waybill: pkg?.waybill,
-    uploadWbn: pkg?.waybill,
-    status: pkg?.status,
+    waybill: pkg.waybill,
+    uploadWbn: data.upload_wbn ?? pkg.waybill,
+    status: pkg.status ?? "Success",
     raw: data,
   };
 }

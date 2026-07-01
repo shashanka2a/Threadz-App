@@ -23,6 +23,7 @@ import {
 import { ChevronDown, ChevronUp, Download, Search } from "lucide-react";
 import type { AdminOrder } from "@/lib/db/admin-orders";
 import { ShipmentPanel } from "@/components/admin/shipment-panel";
+import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 
 type OrdersTableProps = {
   orders: AdminOrder[];
@@ -47,6 +48,44 @@ function formatDate(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function AdminOrderTotals({ order }: { order: AdminOrder }) {
+  const { tax, quotedDelivery } = computeCheckoutTotals(
+    order.total,
+    order.shippingCost
+  );
+
+  return (
+    <div className="border border-neutral-200 bg-white p-4 shrink-0 w-full lg:w-[260px]">
+      <p className="font-medium text-sm mb-3">Order totals</p>
+      <dl className="space-y-2 text-sm">
+        <div className="flex items-center justify-between gap-6">
+          <dt className="text-neutral-600">Products</dt>
+          <dd className="font-medium tabular-nums">{formatInr(order.total)}</dd>
+        </div>
+        <div className="flex items-center justify-between gap-6">
+          <dt className="text-neutral-600">GST (18%, included)</dt>
+          <dd className="tabular-nums">{formatInr(tax)}</dd>
+        </div>
+        {quotedDelivery > 0 && (
+          <div className="flex items-center justify-between gap-6">
+            <dt className="text-neutral-600">Delivery fee</dt>
+            <dd className="text-neutral-400 line-through tabular-nums">
+              {formatInr(quotedDelivery)}
+            </dd>
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-6 border-t border-neutral-200 pt-2 font-medium">
+          <dt>Total paid</dt>
+          <dd className="tabular-nums">{formatInr(order.total)}</dd>
+        </div>
+      </dl>
+      {quotedDelivery > 0 && (
+        <p className="text-xs text-neutral-500 mt-2">Free delivery for customer</p>
+      )}
+    </div>
+  );
 }
 
 export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
@@ -148,7 +187,7 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
       <Card className="border-neutral-200 rounded-none overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table className="min-w-[960px] table-fixed">
+            <Table className="min-w-[960px]">
               <TableHeader>
                 <TableRow className="bg-amber-50 hover:bg-amber-50 border-b border-neutral-300">
                   <TableHead className="w-10 bg-amber-50 font-semibold text-neutral-900" />
@@ -231,26 +270,20 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
                         </TableCell>
                       </TableRow>
                       {isExpanded && (
-                        <TableRow className="bg-neutral-50">
-                          <TableCell colSpan={8}>
-                            <div className="py-4 px-2 space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <p className="font-medium mb-1">Shipping address</p>
-                                  <p className="text-neutral-600">{formatAddress(order)}</p>
-                                  <p className="text-neutral-600 mt-1">{order.phone}</p>
+                        <TableRow className="bg-neutral-50 hover:bg-neutral-50">
+                          <TableCell colSpan={8} className="p-0">
+                            <div className="p-4 md:p-6 space-y-5">
+                              <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+                                <div className="min-w-0 flex-1 text-sm">
+                                  <p className="font-medium mb-2">Shipping address</p>
+                                  <p className="text-neutral-600 break-words leading-relaxed">
+                                    {formatAddress(order)}
+                                  </p>
+                                  <p className="text-neutral-600 mt-2 tabular-nums">
+                                    {order.phone}
+                                  </p>
                                 </div>
-                                <div>
-                                  <p className="font-medium mb-1">Order totals</p>
-                                  <p className="text-neutral-600">Subtotal: ₹{order.subtotal}</p>
-                                  <p className="text-neutral-600">Tax: ₹{order.tax}</p>
-                                  {order.shippingCost > 0 && (
-                                    <p className="text-neutral-600">
-                                      Shipping: ₹{order.shippingCost}
-                                    </p>
-                                  )}
-                                  <p className="text-neutral-600 font-medium">Total: ₹{order.total}</p>
-                                </div>
+                                <AdminOrderTotals order={order} />
                               </div>
 
                               <ShipmentPanel
@@ -261,8 +294,8 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
 
                               <div>
                                 <p className="font-medium mb-2 text-sm">Line items</p>
-                                <div className="border border-neutral-200 overflow-hidden">
-                                  <Table className="table-fixed">
+                                <div className="border border-neutral-200 overflow-x-auto bg-white">
+                                  <Table>
                                     <TableHeader>
                                       <TableRow className="bg-amber-50 hover:bg-amber-50">
                                         <TableHead className="bg-amber-50 font-semibold">

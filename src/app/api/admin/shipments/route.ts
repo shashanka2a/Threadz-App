@@ -85,9 +85,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (!created.success || !created.waybill) {
+      const isBalanceError = /insufficient balance/i.test(created.error ?? "");
       return NextResponse.json(
-        { error: created.error ?? "Delhivery create failed", raw: created.raw },
-        { status: 502 }
+        {
+          error: created.error ?? "Delhivery create failed",
+          code: isBalanceError ? "DELHIVERY_INSUFFICIENT_BALANCE" : "DELHIVERY_CREATE_FAILED",
+          raw: created.raw,
+        },
+        { status: isBalanceError ? 402 : 502 }
       );
     }
 
