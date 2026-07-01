@@ -66,7 +66,19 @@ function LoginForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href={
+                    nextPath !== "/profile"
+                      ? `/forgot-password?next=${encodeURIComponent(nextPath)}`
+                      : "/forgot-password"
+                  }
+                  className="text-xs text-neutral-600 underline underline-offset-4 hover:text-black"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

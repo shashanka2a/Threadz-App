@@ -12,6 +12,8 @@ export const config = {
     "/profile/:path*",
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
     "/checkout/:path*",
     "/cart",
     "/shop/:path*",

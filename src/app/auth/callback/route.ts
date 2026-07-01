@@ -17,5 +17,6 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${siteUrl}/login?error=auth_callback_failed`);
+  const fallbackPath = next === "/reset-password" ? "/forgot-password" : "/login";
+  return NextResponse.redirect(`${siteUrl}${fallbackPath}?error=auth_callback_failed`);
 }

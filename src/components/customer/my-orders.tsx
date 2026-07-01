@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   Loader2,
   Package,
   RefreshCw,
@@ -27,10 +26,45 @@ function formatDate(iso: string) {
 }
 
 function statusColor(status: string) {
-  if (status === "delivered") return "bg-green-600";
-  if (status === "cancelled") return "bg-red-600";
-  if (status === "shipped") return "bg-blue-600";
+  const normalized = status.toLowerCase();
+  if (normalized === "delivered") return "bg-green-600";
+  if (normalized === "cancelled") return "bg-red-600";
+  if (normalized === "shipped") return "bg-blue-600";
+  if (normalized === "confirmed") return "bg-emerald-600";
   return "bg-amber-500";
+}
+
+function formatCustomerOrderStatus(status: string): string {
+  const labels: Record<string, string> = {
+    confirmed: "Order confirmed",
+    pending: "Processing",
+    shipped: "Ready to ship",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+  };
+  return labels[status.toLowerCase()] ?? status;
+}
+
+function formatCustomerShipmentStatus(status: string | null | undefined): string {
+  if (!status) return "Preparing shipment";
+
+  const labels: Record<string, string> = {
+    manifested: "Ready to ship",
+    manifest: "Ready to ship",
+    created: "Ready to ship",
+    success: "Ready to ship",
+    shipped: "Ready to ship",
+    "in transit": "On the way",
+    in_transit: "On the way",
+    dispatched: "On the way",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+    canceled: "Cancelled",
+    rto: "Returned to sender",
+    pending: "Processing",
+  };
+
+  return labels[status.toLowerCase()] ?? status;
 }
 
 export function MyOrders() {
@@ -92,27 +126,6 @@ export function MyOrders() {
     }
   };
 
-  const openLabel = async (waybill: string) => {
-    setActionLoading(`label-${waybill}`);
-    try {
-      const res = await fetch(
-        `/api/customer/shipments/${encodeURIComponent(waybill)}`,
-        { method: "PUT" }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Label unavailable");
-      if (data.labelUrl) {
-        window.open(data.labelUrl, "_blank", "noopener,noreferrer");
-      } else {
-        toast.message("Label not ready yet — try again after pickup");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Label failed");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-neutral-600">
@@ -147,18 +160,12 @@ export function MyOrders() {
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-medium text-sm sm:text-base">{order.id}</span>
                     <Badge className={`rounded-none ${statusColor(order.status)}`}>
-                      {order.status}
+                      {formatCustomerOrderStatus(order.status)}
                     </Badge>
                   </div>
                   <p className="text-sm text-neutral-600">{formatDate(order.createdAt)}</p>
                   <p className="text-sm mt-1">
                     {order.items.length} item(s) · ₹{order.total.toLocaleString()}
-                    {order.shippingCost > 0 && (
-                      <span className="text-neutral-500">
-                        {" "}
-                        (incl. shipping ₹{order.shippingCost})
-                      </span>
-                    )}
                   </p>
                 </div>
                 <Button
@@ -215,14 +222,10 @@ export function MyOrders() {
                         </p>
                         <p>
                           <span className="text-neutral-500">Status:</span>{" "}
-                          {shipment.trackingStatus ?? shipment.delhiveryStatus}
+                          {formatCustomerShipmentStatus(
+                            shipment.trackingStatus ?? shipment.delhiveryStatus
+                          )}
                         </p>
-                        {shipment.shippingCost != null && (
-                          <p>
-                            <span className="text-neutral-500">Shipping cost:</span> ₹
-                            {shipment.shippingCost}
-                          </p>
-                        )}
                         {shipment.cancelledAt && (
                           <p className="text-red-600">Cancelled</p>
                         )}
@@ -245,15 +248,6 @@ export function MyOrders() {
                                   <RefreshCw className="h-4 w-4 mr-1" /> Track
                                 </>
                               )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="rounded-none"
-                              disabled={actionLoading === `label-${waybill}`}
-                              onClick={() => openLabel(waybill)}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" /> Label
                             </Button>
                             {!shipment.cancelledAt && (
                               <Button

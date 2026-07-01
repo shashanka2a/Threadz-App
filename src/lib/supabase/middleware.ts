@@ -5,7 +5,7 @@ import { getSupabaseKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/admin";
 
 const ADMIN_PREFIXES = ["/inventory", "/orders"];
-const AUTH_PAGES = ["/login", "/signup"];
+const AUTH_PAGES = ["/login", "/signup", "/forgot-password"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
