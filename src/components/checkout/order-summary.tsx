@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
-import { computeCheckoutTotals, formatInr, WAREHOUSE_PINCODE } from "@/lib/pricing";
+import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 
 type OrderSummaryProps = {
   title?: string;
@@ -18,7 +18,7 @@ export function OrderSummary({
 }: OrderSummaryProps) {
   const { cartTotal, cartItems, deliveryFee } = useCart();
 
-  const { tax, total, quotedDelivery, deliveryDiscount } = useMemo(
+  const { tax, total, quotedDelivery } = useMemo(
     () => computeCheckoutTotals(cartTotal, deliveryFee),
     [cartTotal, deliveryFee],
   );
@@ -57,14 +57,6 @@ export function OrderSummary({
                   )}
                 </span>
               </div>
-              {!deliveryLoading && deliveryDiscount > 0 && (
-                <div className="flex justify-between text-sm gap-4 text-green-700">
-                  <span>Free delivery discount</span>
-                  <span className="font-medium tabular-nums shrink-0">
-                    −{formatInr(deliveryDiscount)}
-                  </span>
-                </div>
-              )}
             </>
           )}
 
@@ -79,16 +71,11 @@ export function OrderSummary({
             <span>Total</span>
             <span>{formatInr(total)}</span>
           </div>
-          {deliveryDiscount > 0 && (
-            <p className="text-xs text-green-700 font-medium">
-              You save {formatInr(deliveryDiscount)} on delivery
-            </p>
-          )}
           <p className="text-xs text-neutral-500">All product prices inclusive of taxes</p>
         </div>
 
         <p className="text-xs text-neutral-600">
-          • Free delivery from warehouse ({WAREHOUSE_PINCODE})
+          • Free delivery
           <br />
           • 7-day return policy
           <br />• Secure payment processing
