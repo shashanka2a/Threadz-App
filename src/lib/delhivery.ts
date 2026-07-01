@@ -139,7 +139,11 @@ export async function estimateShippingCost(params: {
     normalizePincode(process.env.DELHIVERY_ORIGIN_PINCODE ?? "501401") ||
     "501401";
   const weight = Math.max(100, params.weightGrams);
-  const ss = params.paymentMode === "COD" ? "COD" : "Prepaid";
+  const paymentType = params.paymentMode === "COD" ? "COD" : "Prepaid";
+
+  if (dPin.length !== 6) {
+    throw new Error("Enter a valid 6-digit destination pincode");
+  }
 
   if (isMockMode()) {
     const base = 79;
@@ -160,25 +164,54 @@ export async function estimateShippingCost(params: {
     o_pin: oPin,
     d_pin: dPin,
     ss: "Delivered",
-    pt: ss,
+    pt: paymentType,
   });
 
   const res = await delhiveryFetch(
-    `/api/kinko/v1/invoice/charges/.json/?${qs.toString()}`
+    `/api/kinko/v1/invoice/charges/?${qs.toString()}`
   );
-  const data = (await res.json()) as {
-    total_amount?: number;
-    gross_amount?: number;
-    charge?: number;
-  };
 
-  const cost =
-    data.total_amount ?? data.gross_amount ?? data.charge ?? 0;
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      `Delhivery shipping estimate failed (${res.status}): invalid API response`
+    );
+  }
+
+  const raw = (await res.json()) as
+    | Array<{
+        total_amount?: number;
+        gross_amount?: number;
+        charge?: number;
+      }>
+    | {
+        error?: string;
+        total_amount?: number;
+        gross_amount?: number;
+        charge?: number;
+      };
+
+  if (!res.ok) {
+    const message =
+      !Array.isArray(raw) && typeof raw.error === "string"
+        ? raw.error
+        : `Delhivery shipping estimate failed (${res.status})`;
+    throw new Error(message);
+  }
+
+  const entry = Array.isArray(raw) ? raw[0] : raw;
+  const cost = Math.ceil(
+    Number(entry?.total_amount ?? entry?.gross_amount ?? entry?.charge ?? 0)
+  );
+
+  if (!cost) {
+    throw new Error("No shipping rate returned for this pincode");
+  }
 
   return {
     pincode: dPin,
     weightGrams: weight,
-    estimatedCost: Number(cost) || 0,
+    estimatedCost: cost,
     currency: "INR",
     billingMode: "E",
   };

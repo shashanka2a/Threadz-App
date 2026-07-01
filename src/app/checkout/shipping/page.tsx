@@ -122,13 +122,16 @@ export default function ShippingPage() {
         const res = await fetch(
           `/api/shipping/estimate?pin=${encodeURIComponent(pin)}&weight=${weightGrams}`
         );
-        const data = (await res.json()) as ShippingEstimate;
+        const data = (await res.json()) as ShippingEstimate & { error?: string };
         if (res.ok) {
           setShippingEstimate(data);
           setDeliveryFee(data.estimatedCost);
         } else {
           setShippingEstimate(null);
           setDeliveryFee(0);
+          if (data.error) {
+            console.warn("[shipping estimate]", data.error);
+          }
         }
       } catch {
         setShippingEstimate(null);
