@@ -10,6 +10,7 @@ export const config = {
     "/inventory/:path*",
     "/orders/:path*",
     "/profile/:path*",
+    "/my-orders",
     "/login",
     "/signup",
     "/forgot-password",

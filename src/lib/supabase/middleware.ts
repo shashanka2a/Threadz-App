@@ -39,6 +39,14 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  if (pathname === "/my-orders" || pathname.startsWith("/my-orders/")) {
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   if (AUTH_PAGES.includes(pathname) && user) {
     return NextResponse.redirect(new URL("/profile", request.url));
   }

@@ -15,6 +15,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { CustomerOrder } from "@/lib/db/customer-orders";
+import {
+  customerOrderStatusColor,
+  formatCustomerOrderStatusLabel,
+  formatCustomerShipmentStatus,
+  getTrackingFromShipment,
+  resolveCustomerOrderStatusKey,
+} from "@/lib/customer-order-status";
 import type { TrackingResult } from "@/types/shipment";
 
 function formatDate(iso: string) {
@@ -23,48 +30,6 @@ function formatDate(iso: string) {
     month: "short",
     year: "numeric",
   });
-}
-
-function statusColor(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized === "delivered") return "bg-green-600";
-  if (normalized === "cancelled") return "bg-red-600";
-  if (normalized === "shipped") return "bg-blue-600";
-  if (normalized === "confirmed") return "bg-emerald-600";
-  return "bg-amber-500";
-}
-
-function formatCustomerOrderStatus(status: string): string {
-  const labels: Record<string, string> = {
-    confirmed: "Order confirmed",
-    pending: "Processing",
-    shipped: "Ready to ship",
-    delivered: "Delivered",
-    cancelled: "Cancelled",
-  };
-  return labels[status.toLowerCase()] ?? status;
-}
-
-function formatCustomerShipmentStatus(status: string | null | undefined): string {
-  if (!status) return "Preparing shipment";
-
-  const labels: Record<string, string> = {
-    manifested: "Ready to ship",
-    manifest: "Ready to ship",
-    created: "Ready to ship",
-    success: "Ready to ship",
-    shipped: "Ready to ship",
-    "in transit": "On the way",
-    in_transit: "On the way",
-    dispatched: "On the way",
-    delivered: "Delivered",
-    cancelled: "Cancelled",
-    canceled: "Cancelled",
-    rto: "Returned to sender",
-    pending: "Processing",
-  };
-
-  return labels[status.toLowerCase()] ?? status;
 }
 
 export function MyOrders() {
@@ -150,7 +115,12 @@ export function MyOrders() {
         const expanded = expandedId === order.id;
         const shipment = order.shipment;
         const waybill = shipment?.waybill;
-        const track = waybill ? tracking[waybill] : undefined;
+        const cachedTracking = waybill ? tracking[waybill] : undefined;
+        const storedTracking = getTrackingFromShipment(shipment);
+        const liveTracking = cachedTracking ?? storedTracking;
+        const statusKey = resolveCustomerOrderStatusKey(order, liveTracking);
+        const statusLabel = formatCustomerOrderStatusLabel(statusKey);
+        const track = cachedTracking ?? storedTracking;
 
         return (
           <Card key={order.id} className="border-neutral-200 rounded-none">
@@ -159,8 +129,8 @@ export function MyOrders() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-medium text-sm sm:text-base">{order.id}</span>
-                    <Badge className={`rounded-none ${statusColor(order.status)}`}>
-                      {formatCustomerOrderStatus(order.status)}
+                    <Badge className={`rounded-none ${customerOrderStatusColor(statusKey)}`}>
+                      {statusLabel}
                     </Badge>
                   </div>
                   <p className="text-sm text-neutral-600">{formatDate(order.createdAt)}</p>
@@ -222,9 +192,7 @@ export function MyOrders() {
                         </p>
                         <p>
                           <span className="text-neutral-500">Status:</span>{" "}
-                          {formatCustomerShipmentStatus(
-                            shipment.trackingStatus ?? shipment.delhiveryStatus
-                          )}
+                          {formatCustomerShipmentStatus(order, liveTracking)}
                         </p>
                         {shipment.cancelledAt && (
                           <p className="text-red-600">Cancelled</p>

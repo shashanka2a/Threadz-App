@@ -7,34 +7,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Loader2, LogOut, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { MyOrders } from "@/components/customer/my-orders";
+import {
+  AddressFormPanel,
+  type AddressFormValues,
+} from "@/components/customer/address-form-panel";
 import { createClient } from "@/lib/supabase/client";
 import type { SavedAddress } from "@/lib/addresses";
 
-const inputClass = "rounded-none mt-1.5 border-neutral-300";
-
-const emptyAddress = {
-  label: "Home",
-  fullName: "",
-  phone: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  country: "India",
-  isDefault: false,
-};
+const inputClass = "rounded-none mt-1.5 border-neutral-300 text-base min-h-11";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -47,7 +31,18 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [addressForm, setAddressForm] = useState(emptyAddress);
+  const [addressInitialValues, setAddressInitialValues] = useState<AddressFormValues>({
+    label: "Home",
+    fullName: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "India",
+    isDefault: false,
+  });
   const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
@@ -65,10 +60,16 @@ export default function ProfilePage() {
 
   const openNewAddress = () => {
     setEditingAddressId(null);
-    setAddressForm({
-      ...emptyAddress,
+    setAddressInitialValues({
+      label: "Home",
       fullName: profile?.full_name ?? "",
       phone: profile?.phone ?? "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "India",
       isDefault: addresses.length === 0,
     });
     setAddressDialogOpen(true);
@@ -76,7 +77,7 @@ export default function ProfilePage() {
 
   const openEditAddress = (address: SavedAddress) => {
     setEditingAddressId(address.id);
-    setAddressForm({
+    setAddressInitialValues({
       label: address.label,
       fullName: address.fullName,
       phone: address.phone,
@@ -112,8 +113,7 @@ export default function ProfilePage() {
     await refreshProfile();
   };
 
-  const saveAddress = async (event: FormEvent) => {
-    event.preventDefault();
+  const saveAddress = async (addressForm: AddressFormValues) => {
     if (!user) return;
 
     setSavingAddress(true);
@@ -250,17 +250,22 @@ export default function ProfilePage() {
         </Card>
 
         <Card className="border-neutral-200 rounded-none">
-          <CardContent className="p-6">
-            <div className="mb-4">
+          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
               <h2 className="text-lg font-medium flex items-center gap-2">
                 <Package className="h-5 w-5" />
                 My orders
               </h2>
               <p className="text-sm text-neutral-600">
-                Track shipments, download labels, and manage deliveries.
+                Track shipments and view order history.
               </p>
             </div>
-            <MyOrders />
+            <Button
+              asChild
+              className="rounded-none bg-black text-white hover:bg-neutral-800 w-full sm:w-auto"
+            >
+              <Link href="/my-orders">View orders</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -349,131 +354,14 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
-        <DialogContent className="max-w-lg rounded-none">
-          <DialogHeader>
-            <DialogTitle>{editingAddressId ? "Edit address" : "Add address"}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={saveAddress} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Label</Label>
-                <Input
-                  value={addressForm.label}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, label: e.target.value }))}
-                  className={inputClass}
-                  placeholder="Home, Office..."
-                  required
-                />
-              </div>
-              <div>
-                <Label>Full name</Label>
-                <Input
-                  value={addressForm.fullName}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, fullName: e.target.value }))}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Phone</Label>
-                <Input
-                  value={addressForm.phone}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, phone: e.target.value }))}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Address line 1</Label>
-                <Input
-                  value={addressForm.addressLine1}
-                  onChange={(e) =>
-                    setAddressForm((p) => ({ ...p, addressLine1: e.target.value }))
-                  }
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Address line 2</Label>
-                <Input
-                  value={addressForm.addressLine2}
-                  onChange={(e) =>
-                    setAddressForm((p) => ({ ...p, addressLine2: e.target.value }))
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <Label>City</Label>
-                <Input
-                  value={addressForm.city}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, city: e.target.value }))}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <Label>State</Label>
-                <Input
-                  value={addressForm.state}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, state: e.target.value }))}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Postal code</Label>
-                <Input
-                  value={addressForm.postalCode}
-                  onChange={(e) =>
-                    setAddressForm((p) => ({ ...p, postalCode: e.target.value }))
-                  }
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Country</Label>
-                <Input
-                  value={addressForm.country}
-                  onChange={(e) => setAddressForm((p) => ({ ...p, country: e.target.value }))}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <label className="md:col-span-2 flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={addressForm.isDefault}
-                  onChange={(e) =>
-                    setAddressForm((p) => ({ ...p, isDefault: e.target.checked }))
-                  }
-                />
-                Set as default address
-              </label>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-none"
-                onClick={() => setAddressDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="rounded-none bg-black text-white hover:bg-neutral-800"
-                disabled={savingAddress}
-              >
-                {savingAddress ? "Saving..." : "Save address"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddressFormPanel
+        open={addressDialogOpen}
+        onOpenChange={setAddressDialogOpen}
+        title={editingAddressId ? "Edit address" : "Add address"}
+        initialValues={addressInitialValues}
+        saving={savingAddress}
+        onSubmit={saveAddress}
+      />
     </div>
   );
 }

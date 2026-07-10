@@ -9,6 +9,7 @@ import {
   Sun,
   Menu,
   User,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
@@ -145,6 +146,17 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       </nav>
 
       <div className="mt-auto border-t border-border px-6 py-5 space-y-3">
+        <Button
+          variant="outline"
+          className="w-full rounded-none justify-start"
+          onClick={() => {
+            onNavigate();
+            router.push(user ? "/my-orders" : "/login");
+          }}
+        >
+          <Package className="h-4 w-4 mr-2" />
+          {user ? "My orders" : "Sign in"}
+        </Button>
         <Button
           variant="outline"
           className="w-full rounded-none justify-start"
