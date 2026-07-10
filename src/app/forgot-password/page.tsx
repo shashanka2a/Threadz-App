@@ -9,12 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KeyRound, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
 
 function ForgotPasswordForm() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/profile";
-  const { resetPassword } = useAuth();
 
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,16 +27,25 @@ function ForgotPasswordForm() {
     event.preventDefault();
     setIsLoading(true);
 
-    const result = await resetPassword(email.trim());
-    if (result.error) {
-      toast.error(result.error);
-      setIsLoading(false);
-      return;
-    }
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = (await res.json()) as { error?: string };
 
-    setEmailSent(true);
-    setIsLoading(false);
-    toast.success("Password reset email sent");
+      if (!res.ok) {
+        throw new Error(data.error ?? "Could not send reset email");
+      }
+
+      setEmailSent(true);
+      toast.success("Password reset email sent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset email");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -89,7 +96,7 @@ function ForgotPasswordForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
-                  className="rounded-none border-neutral-300"
+                  className="rounded-none border-neutral-300 text-base min-h-11"
                   required
                 />
               </div>

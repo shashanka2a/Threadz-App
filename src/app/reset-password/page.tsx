@@ -21,7 +21,10 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!loading && !user) {
-      toast.error("Reset link is invalid or has expired");
+      const timer = setTimeout(() => {
+        toast.error("Reset link is invalid or has expired");
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [loading, user]);
 
