@@ -307,7 +307,10 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/size-guide" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="/size-guide#size-chart"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Size Guide
                   </Link>
                 </li>

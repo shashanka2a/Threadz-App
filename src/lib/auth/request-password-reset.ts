@@ -4,6 +4,7 @@ import {
   isSmtpConfigured,
   sendPasswordResetEmail,
 } from "@/lib/email/send-password-reset";
+import { getSiteUrl } from "@/lib/site-url";
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
@@ -11,51 +12,23 @@ function isUserNotFoundError(message: string): boolean {
   return message.toLowerCase().includes("not found");
 }
 
-export async function requestPasswordReset(
+async function sendRecoveryEmail(
   email: string,
-  origin: string
+  redirectTo: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const normalizedEmail = email.trim().toLowerCase();
-
-  if (!EMAIL_PATTERN.test(normalizedEmail)) {
-    return { ok: false, error: "Enter a valid email address" };
-  }
-
-  const redirectTo = getPasswordResetRedirectUrl(origin);
   const supabase = createAdminClient();
 
-  // 1) Prefer Supabase Auth email (uses SMTP configured in Supabase dashboard)
-  const supabaseSend = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo,
-  });
-
-  if (!supabaseSend.error) {
-    return { ok: true };
-  }
-
-  if (isUserNotFoundError(supabaseSend.error.message)) {
-    return { ok: true };
-  }
-
-  // 2) Fallback: generate recovery link and send via app SMTP / Resend
-  const { data, error: linkError } = await supabase.auth.admin.generateLink({
+  const { data, error } = await supabase.auth.admin.generateLink({
     type: "recovery",
-    email: normalizedEmail,
+    email,
     options: { redirectTo },
   });
 
-  if (linkError) {
-    if (isUserNotFoundError(linkError.message)) {
+  if (error) {
+    if (isUserNotFoundError(error.message)) {
       return { ok: true };
     }
-
-    return {
-      ok: false,
-      error:
-        supabaseSend.error.message ||
-        linkError.message ||
-        "Could not send password reset email",
-    };
+    return { ok: false, error: error.message };
   }
 
   const resetUrl = data.properties?.action_link;
@@ -63,21 +36,51 @@ export async function requestPasswordReset(
     return { ok: false, error: "Could not create password reset link" };
   }
 
-  const sent = await sendPasswordResetEmail({
-    to: normalizedEmail,
-    resetUrl,
-  });
+  return sendPasswordResetEmail({ to: email, resetUrl });
+}
 
-  if (!sent.ok) {
-    const hint = isSmtpConfigured()
-      ? " Check SMTP credentials or Supabase Auth SMTP settings."
-      : " Configure SMTP_HOST, SMTP_USER, and SMTP_PASS, or fix Supabase Auth SMTP.";
+export async function requestPasswordReset(
+  email: string,
+  _origin?: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const normalizedEmail = email.trim().toLowerCase();
 
-    return {
-      ok: false,
-      error: `${supabaseSend.error.message}. ${sent.error}.${hint}`,
-    };
+  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    return { ok: false, error: "Enter a valid email address" };
   }
 
-  return { ok: true };
+  const redirectTo = getPasswordResetRedirectUrl(getSiteUrl());
+
+  if (isSmtpConfigured()) {
+    const sent = await sendRecoveryEmail(normalizedEmail, redirectTo);
+    if (sent.ok) return { ok: true };
+
+    const supabase = createAdminClient();
+    const fallback = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo,
+    });
+
+    if (!fallback.error || isUserNotFoundError(fallback.error.message)) {
+      return { ok: true };
+    }
+
+    return { ok: false, error: sent.error };
+  }
+
+  const supabase = createAdminClient();
+  const supabaseSend = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo,
+  });
+
+  if (!supabaseSend.error || isUserNotFoundError(supabaseSend.error.message)) {
+    return { ok: true };
+  }
+
+  const sent = await sendRecoveryEmail(normalizedEmail, redirectTo);
+  if (sent.ok) return { ok: true };
+
+  return {
+    ok: false,
+    error: supabaseSend.error.message || sent.error,
+  };
 }

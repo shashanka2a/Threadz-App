@@ -1,17 +1,9 @@
+import { isSmtpConfigured, sendEmail } from "@/lib/email/transport";
+
 type SendPasswordResetEmailInput = {
   to: string;
   resetUrl: string;
 };
-
-function getFromAddress(): string {
-  return (
-    process.env.EMAIL_FROM?.trim() ||
-    process.env.SMTP_FROM?.trim() ||
-    (process.env.SMTP_USER
-      ? `Threadz Studio <${process.env.SMTP_USER.trim()}>`
-      : "Threadz Studio <support.threadzstudio@gmail.com>")
-  );
-}
 
 function getPasswordResetHtml(resetUrl: string): string {
   return `
@@ -36,49 +28,6 @@ function getPasswordResetHtml(resetUrl: string): string {
   `;
 }
 
-function isSmtpConfigured(): boolean {
-  return Boolean(
-    process.env.SMTP_HOST?.trim() &&
-      process.env.SMTP_USER?.trim() &&
-      process.env.SMTP_PASS?.trim()
-  );
-}
-
-async function sendViaSmtp({
-  to,
-  resetUrl,
-}: SendPasswordResetEmailInput): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!isSmtpConfigured()) {
-    return { ok: false, error: "SMTP is not configured in environment variables" };
-  }
-
-  const nodemailer = await import("nodemailer");
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST!.trim(),
-    port: Number(process.env.SMTP_PORT ?? "587"),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER!.trim(),
-      pass: process.env.SMTP_PASS!.trim(),
-    },
-  });
-
-  try {
-    await transporter.sendMail({
-      from: getFromAddress(),
-      to,
-      subject: "Reset your Threadz password",
-      html: getPasswordResetHtml(resetUrl),
-    });
-    return { ok: true };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "SMTP send failed",
-    };
-  }
-}
-
 async function sendViaResend({
   to,
   resetUrl,
@@ -95,7 +44,10 @@ async function sendViaResend({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: getFromAddress(),
+      from:
+        process.env.EMAIL_FROM?.trim() ||
+        process.env.RESEND_FROM?.trim() ||
+        "Threadz Studio <onboarding@resend.dev>",
       to: [to],
       subject: "Reset your Threadz password",
       html: getPasswordResetHtml(resetUrl),
@@ -116,10 +68,14 @@ async function sendViaResend({
 }
 
 export async function sendPasswordResetEmail(
-  input: SendPasswordResetEmailInput
+  input: SendPasswordResetEmailInput,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (isSmtpConfigured()) {
-    const smtpResult = await sendViaSmtp(input);
+    const smtpResult = await sendEmail({
+      to: input.to,
+      subject: "Reset your Threadz password",
+      html: getPasswordResetHtml(input.resetUrl),
+    });
     if (smtpResult.ok) return smtpResult;
   }
 

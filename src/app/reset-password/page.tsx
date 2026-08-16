@@ -10,23 +10,96 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 function ResetPasswordForm() {
   const router = useRouter();
   const { user, loading, updatePassword } = useAuth();
+  const [sessionReady, setSessionReady] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      const timer = setTimeout(() => {
-        toast.error("Reset link is invalid or has expired");
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, user]);
+    let mounted = true;
+    const supabase = createClient();
+
+    const finishCheck = (hasSession: boolean) => {
+      if (!mounted) return;
+      setSessionReady(hasSession);
+      setCheckingSession(false);
+    };
+
+    const checkSession = async () => {
+      const hash = window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : "";
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const type = hashParams.get("type");
+
+      if (accessToken && refreshToken && type === "recovery") {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (!error) {
+          window.history.replaceState({}, "", "/reset-password");
+          finishCheck(true);
+          return;
+        }
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get("token_hash");
+      const otpType = params.get("type");
+
+      if (tokenHash && otpType === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+        if (!error) {
+          window.history.replaceState({}, "", "/reset-password");
+          finishCheck(true);
+          return;
+        }
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      finishCheck(Boolean(session));
+    };
+
+    void checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        event === "PASSWORD_RECOVERY" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED"
+      ) {
+        if (session) {
+          setSessionReady(true);
+          setCheckingSession(false);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const hasRecoverySession = sessionReady || Boolean(user);
+  const isChecking = loading || checkingSession;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -55,7 +128,7 @@ function ResetPasswordForm() {
     router.refresh();
   };
 
-  if (loading) {
+  if (isChecking) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center text-neutral-600">
         <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -64,7 +137,7 @@ function ResetPasswordForm() {
     );
   }
 
-  if (!user) {
+  if (!hasRecoverySession) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
         <Card className="w-full max-w-md border-neutral-200 rounded-none">

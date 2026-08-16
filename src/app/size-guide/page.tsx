@@ -11,7 +11,7 @@ export default function SizeGuidePage() {
         regular silhouette. Oversized styles are cut wider with dropped shoulders for a
         relaxed look.
       </p>
-      <div className="overflow-x-auto">
+      <div id="size-chart" className="scroll-mt-24 overflow-x-auto">
         <table className="w-full text-sm border border-border">
           <thead>
             <tr className="border-b border-border bg-muted/40">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStockStatus } from "@/data/products";
 import { canAddToCart, isProductSoldOut } from "@/lib/stock";
@@ -188,7 +189,12 @@ export default function ProductDetailContent({
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm">Select Size</label>
-              <button className="text-sm text-blue-600 hover:underline">Size Guide</button>
+              <Link
+                href="/size-guide#size-chart"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Size Guide
+              </Link>
             </div>
             <div className="flex gap-3 flex-wrap">
               {product.sizes.map((size) => {

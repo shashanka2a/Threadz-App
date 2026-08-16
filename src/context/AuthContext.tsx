@@ -13,7 +13,6 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileRow } from "@/lib/supabase/database.types";
 import { mapAddressRow, type SavedAddress } from "@/lib/addresses";
-import { getAuthCallbackUrl } from "@/lib/site-url";
 
 type AuthContextType = {
   user: User | null;
@@ -125,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (session?.user) {
-        await Promise.all([refreshProfile(), refreshAddresses()]);
+        void Promise.all([refreshProfile(), refreshAddresses()]);
       }
     };
 
@@ -133,10 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        await Promise.all([refreshProfile(), refreshAddresses()]);
+        void Promise.all([refreshProfile(), refreshAddresses()]);
       } else {
         setProfile(null);
         setAddresses([]);
@@ -162,22 +161,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName: string,
     redirectPath = "/profile",
   ) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: getAuthCallbackUrl(redirectPath),
-      },
+    const response = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.trim(),
+        password,
+        fullName: fullName.trim(),
+        redirectPath,
+      }),
     });
 
-    if (error) return { error: error.message };
+    const data = (await response.json()) as {
+      error?: string;
+      needsConfirmation?: boolean;
+    };
 
-    if (!data.session) {
+    if (!response.ok) {
+      return { error: data.error ?? "Could not create account" };
+    }
+
+    if (data.needsConfirmation) {
       return { needsConfirmation: true };
     }
 
-    setUser(data.user);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      return { needsConfirmation: true };
+    }
+
     await Promise.all([refreshProfile(), refreshAddresses()]);
     return {};
   };
