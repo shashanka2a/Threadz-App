@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -11,7 +12,7 @@ export type AdminCategory = {
   productCount: number;
 };
 
-export async function getCategories(): Promise<CategoryRow[]> {
+export const getCategories = cache(async (): Promise<CategoryRow[]> => {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -27,7 +28,8 @@ export async function getCategories(): Promise<CategoryRow[]> {
   }
 
   return data ?? [];
-}
+});
+
 
 export function getShopCategoryNames(categories: CategoryRow[]): string[] {
   return ["All Products", ...categories.map((category) => category.name)];

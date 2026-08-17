@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { mapProductRow } from "@/lib/db/mappers";
 import { staticProducts } from "@/data/products";
 import type { Product } from "@/types/product";
 
-export async function getProducts(): Promise<Product[]> {
+export const getProducts = cache(async (): Promise<Product[]> => {
   if (!isSupabaseConfigured()) {
     return staticProducts;
   }
@@ -26,9 +27,9 @@ export async function getProducts(): Promise<Product[]> {
   }
 
   return data.map(mapProductRow);
-}
+});
 
-export async function getProductById(id: string): Promise<Product | undefined> {
+export const getProductById = cache(async (id: string): Promise<Product | undefined> => {
   if (!isSupabaseConfigured()) {
     return staticProducts.find((product) => product.id === id);
   }
@@ -51,4 +52,5 @@ export async function getProductById(id: string): Promise<Product | undefined> {
   }
 
   return mapProductRow(data);
-}
+});
+

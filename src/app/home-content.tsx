@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -21,9 +22,10 @@ export default function HomeContent({ products }: HomeContentProps) {
 
   return (
     <div>
-      <section className="container mx-auto px-4 py-20 md:py-32">
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 md:py-32" aria-labelledby="hero-heading">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6">
+          <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6">
             <span className="font-serif text-foreground">Premium.</span>
             <br />
             <span className="font-serif italic text-muted-foreground">Everyday T-Shirts.</span>
@@ -38,7 +40,7 @@ export default function HomeContent({ products }: HomeContentProps) {
             <Button
               size="lg"
               onClick={() => router.push("/shop")}
-              className="bg-foreground text-background hover:bg-foreground/90 px-8 rounded-none"
+              className="bg-foreground text-background hover:bg-foreground/90 px-8 rounded-none transition-transform hover:scale-105 active:scale-95"
             >
               Shop Now
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -47,7 +49,7 @@ export default function HomeContent({ products }: HomeContentProps) {
               size="lg"
               onClick={() => router.push("/ai-studio")}
               variant="outline"
-              className="border-foreground text-foreground hover:bg-accent px-8 rounded-none"
+              className="border-foreground text-foreground hover:bg-accent px-8 rounded-none transition-transform hover:scale-105 active:scale-95"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Try AI Studio
@@ -56,9 +58,12 @@ export default function HomeContent({ products }: HomeContentProps) {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-16">
+      {/* Collection Section */}
+      <section className="container mx-auto px-4 py-16" aria-labelledby="collection-heading">
         <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-2 text-foreground">Our Collection</h2>
+          <h2 id="collection-heading" className="text-2xl sm:text-3xl md:text-4xl font-serif mb-2 text-foreground">
+            Our Collection
+          </h2>
           <p className="text-muted-foreground">
             Explore our premium quality t-shirts in various colors
           </p>
@@ -70,46 +75,57 @@ export default function HomeContent({ products }: HomeContentProps) {
               ((product.mrp - product.price) / product.mrp) * 100
             );
             const isBestseller = index === 0 || index === 5;
+            const isAboveTheFold = index < 3;
 
             return (
-              <Card
+              <Link
                 key={product.id}
-                className="border-border rounded-none overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-card"
-                onClick={() => router.push(`/product/${product.id}`)}
+                href={`/product/${product.id}`}
+                aria-label={`View details for ${product.name} - ₹${product.price}`}
+                className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <CardContent className="p-0">
-                  <div className="relative bg-muted aspect-square">
-                    <ProductImage src={product.image} alt={product.name} />
-                    {isBestseller && (
-                      <Badge className="absolute top-3 left-3 bg-yellow-400 text-black dark:bg-yellow-500 dark:text-black rounded-none text-xs">
-                        BESTSELLER
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="rounded-none text-[10px]">
-                        {product.category}
-                      </Badge>
-                      <ProductStockBadgeRow product={product} />
+                <Card className="h-full border-border rounded-none overflow-hidden bg-card transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl group-hover:border-foreground/30">
+                  <CardContent className="p-0">
+                    <div className="relative bg-muted aspect-square overflow-hidden">
+                      <ProductImage
+                        src={product.image}
+                        alt={product.name}
+                        priority={isAboveTheFold}
+                        className="transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {isBestseller && (
+                        <Badge className="absolute top-3 left-3 bg-yellow-400 text-black dark:bg-yellow-500 dark:text-black rounded-none text-xs shadow-sm z-20">
+                          BESTSELLER
+                        </Badge>
+                      )}
                     </div>
-                    <ProductRating className="mb-1" />
-                    <h3 className="font-medium mb-1 text-card-foreground">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-1">{product.color}</p>
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{product.quality}</p>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg text-card-foreground">₹{product.price}</span>
-                      <span className="text-sm text-muted-foreground line-through">
-                        ₹{product.mrp}
-                      </span>
-                      <span className="text-sm text-green-600 dark:text-green-400">
-                        {discount}% OFF
-                      </span>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className="rounded-none text-[10px]">
+                          {product.category}
+                        </Badge>
+                        <ProductStockBadgeRow product={product} />
+                      </div>
+                      <ProductRating className="mb-1" />
+                      <h3 className="font-medium mb-1 text-card-foreground group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-1">{product.color}</p>
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{product.quality}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg font-medium text-card-foreground">₹{product.price}</span>
+                        <span className="text-sm text-muted-foreground line-through">
+                          ₹{product.mrp}
+                        </span>
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                          {discount}% OFF
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Lowest price in last 30 days</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">Lowest price in last 30 days</p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
@@ -119,7 +135,7 @@ export default function HomeContent({ products }: HomeContentProps) {
             size="lg"
             onClick={() => router.push("/shop")}
             variant="outline"
-            className="border-foreground text-foreground hover:bg-accent px-8 rounded-none"
+            className="border-foreground text-foreground hover:bg-accent px-8 rounded-none transition-transform hover:scale-105 active:scale-95"
           >
             View All Products
           </Button>
@@ -128,3 +144,4 @@ export default function HomeContent({ products }: HomeContentProps) {
     </div>
   );
 }
+

@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { UserAccountButton } from "@/components/user-account-button";
 import { useAuth } from "@/context/AuthContext";
+import { RouteProgressBar } from "@/components/ui/route-progress-bar";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -41,9 +42,13 @@ const NAV_LINKS = [
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="flex flex-col items-center text-center min-w-0">
+    <Link
+      href="/"
+      aria-label="THREADZ Homepage"
+      className="flex flex-col items-center text-center min-w-0 group"
+    >
       <span
-        className={`tracking-wider font-serif text-foreground ${
+        className={`tracking-wider font-serif text-foreground transition-opacity group-hover:opacity-80 ${
           compact ? "text-xl sm:text-2xl" : "text-2xl"
         }`}
       >
@@ -65,27 +70,40 @@ function Logo({ compact = false }: { compact?: boolean }) {
 function CartButton({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
   const { cartCount } = useCart();
+  const [badgeAnimate, setBadgeAnimate] = useState(false);
+
+  useEffect(() => {
+    if (cartCount > 0) {
+      setBadgeAnimate(true);
+      const timer = setTimeout(() => setBadgeAnimate(false), 350);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
 
   return (
     <Button
       variant="ghost"
       size="icon"
+      aria-label={cartCount > 0 ? `Shopping cart, ${cartCount} items` : "Shopping cart is empty"}
       onClick={() => {
         onNavigate?.();
         router.push("/cart");
       }}
-      className="rounded-full relative shrink-0"
+      className="rounded-full relative shrink-0 transition-transform active:scale-95"
     >
-      <ShoppingCart className="h-4 w-4" />
+      <ShoppingCart className="h-4 w-4" aria-hidden="true" />
       {cartCount > 0 && (
         <Badge
+          key={cartCount}
           variant="default"
-          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-black text-white"
+          className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-foreground text-background font-semibold shadow-sm ${
+            badgeAnimate ? "animate-cart-pop" : ""
+          }`}
         >
           {cartCount}
         </Badge>
       )}
-      <span className="sr-only">Cart ({cartCount})</span>
+      <span className="sr-only">Cart ({cartCount} items)</span>
     </Button>
   );
 }
@@ -104,15 +122,16 @@ function ThemeToggle({ className }: { className?: string }) {
     <Button
       variant="ghost"
       size="icon"
+      aria-label={darkMode ? "Switch to light theme" : "Switch to dark theme"}
       onClick={() => setTheme(darkMode ? "light" : "dark")}
-      className={`rounded-full shrink-0 ${className ?? ""}`}
+      className={`rounded-full shrink-0 transition-transform active:scale-95 ${className ?? ""}`}
     >
       {mounted && darkMode ? (
-        <Sun className="h-4 w-4" />
+        <Sun className="h-4 w-4 transition-transform duration-300 rotate-0" aria-hidden="true" />
       ) : (
-        <Moon className="h-4 w-4" />
+        <Moon className="h-4 w-4 transition-transform duration-300 rotate-0" aria-hidden="true" />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{darkMode ? "Switch to light theme" : "Switch to dark theme"}</span>
     </Button>
   );
 }
@@ -124,21 +143,21 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const accountLabel = user ? "Profile" : "Sign in";
 
   return (
-    <SheetContent side="left" className="w-[min(100vw-2rem,320px)] rounded-none p-0">
+    <SheetContent side="left" className="w-[min(100vw-2rem,320px)] rounded-none p-0 bg-background">
       <SheetHeader className="border-b border-border px-6 py-5 text-left">
-        <SheetTitle className="font-serif text-xl tracking-wider">THREADZ</SheetTitle>
+        <SheetTitle className="font-serif text-xl tracking-wider text-foreground">THREADZ</SheetTitle>
         <p className="text-xs text-muted-foreground uppercase tracking-widest">
           Premium Cotton T-Shirts
         </p>
       </SheetHeader>
 
-      <nav className="flex flex-col px-2 py-4">
+      <nav aria-label="Mobile Navigation" className="flex flex-col px-2 py-4">
         {NAV_LINKS.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             onClick={onNavigate}
-            className="px-4 py-3 text-sm uppercase tracking-wider text-foreground hover:bg-muted transition-colors"
+            className="px-4 py-3 text-sm uppercase tracking-wider text-foreground hover:bg-muted/80 transition-colors"
           >
             {link.label}
           </Link>
@@ -154,7 +173,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
             router.push(user ? "/my-orders" : "/login");
           }}
         >
-          <Package className="h-4 w-4 mr-2" />
+          <Package className="h-4 w-4 mr-2" aria-hidden="true" />
           {user ? "My orders" : "Sign in"}
         </Button>
         <Button
@@ -165,7 +184,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
             router.push(accountHref);
           }}
         >
-          <User className="h-4 w-4 mr-2" />
+          <User className="h-4 w-4 mr-2" aria-hidden="true" />
           {accountLabel}
         </Button>
         <Button
@@ -176,10 +195,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
             router.push("/cart");
           }}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
+          <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
           View cart
         </Button>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-2">
           <span className="text-sm text-muted-foreground">Theme</span>
           <ThemeToggle />
         </div>
@@ -195,14 +214,33 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background transition-colors overflow-x-hidden">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors">
+      {/* Top Progress Bar */}
+      <RouteProgressBar />
+
+      {/* Skip to Main Content Link for Keyboard Accessibility (WCAG) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-foreground focus:text-background focus:ring-2 focus:ring-ring focus:shadow-xl font-medium text-sm"
+      >
+        Skip to main content
+      </a>
+
+      <header
+        role="banner"
+        className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors"
+      >
         <div className="container mx-auto px-4 py-3 md:py-4">
           {/* Mobile header */}
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full shrink-0">
-                  <Menu className="h-5 w-5" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open mobile navigation menu"
+                  className="rounded-full shrink-0"
+                >
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
@@ -221,7 +259,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
           {/* Desktop header */}
           <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center gap-8">
+            <nav aria-label="Main Navigation" className="flex items-center gap-8">
               <Link
                 href="/shop"
                 className="text-sm uppercase tracking-wider text-foreground hover:opacity-70 transition-opacity"
@@ -234,7 +272,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
               >
                 AI Studio
               </Link>
-            </div>
+            </nav>
 
             <Logo />
 
@@ -247,9 +285,11 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main>{children}</main>
+      <main id="main-content" tabIndex={-1} className="outline-none">
+        {children}
+      </main>
 
-      <footer className="border-t border-border mt-12 md:mt-20 bg-background transition-colors">
+      <footer role="contentinfo" className="border-t border-border mt-12 md:mt-20 bg-background transition-colors">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
@@ -258,6 +298,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
                 Premium cotton t-shirts in plain and oversized fits for everyday wear.
               </p>
             </div>
+
             <div>
               <h4 className="text-sm uppercase tracking-wider mb-4 text-foreground">
                 Shop

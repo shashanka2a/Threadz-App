@@ -14,7 +14,7 @@ type PincodeCheckerProps = {
 };
 
 const fieldClass =
-  "h-10 rounded-none border-neutral-300 bg-white text-sm focus-visible:border-neutral-900 focus-visible:ring-neutral-900/10";
+  "h-10 rounded-none border-border bg-background text-sm text-foreground focus-visible:border-foreground focus-visible:ring-foreground/20";
 
 export function PincodeChecker({
   compact = false,
@@ -64,8 +64,8 @@ export function PincodeChecker({
     <div className={compact ? "space-y-2" : "space-y-3"}>
       {!compact && (
         <div className="flex items-center gap-2">
-          <Truck className="h-4 w-4 text-neutral-500 shrink-0" />
-          <Label htmlFor="pincode-check" className="text-sm font-medium text-neutral-900">
+          <Truck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          <Label htmlFor="pincode-check" className="text-sm font-medium text-foreground">
             Check delivery to your pincode
           </Label>
         </div>
@@ -74,8 +74,8 @@ export function PincodeChecker({
       <form onSubmit={check} className="flex items-center gap-2">
         <div className="relative flex-1 min-w-0">
           <MapPin
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
-            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
           />
           <Input
             id="pincode-check"
@@ -96,11 +96,11 @@ export function PincodeChecker({
         <Button
           type="submit"
           disabled={loading || pin.length !== 6}
-          className={`${fieldClass} shrink-0 px-5 bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:text-neutral-500`}
+          className="h-10 rounded-none shrink-0 px-5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 transition-transform active:scale-95"
         >
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               <span className="ml-1.5">Checking</span>
             </>
           ) : (
@@ -110,7 +110,7 @@ export function PincodeChecker({
       </form>
 
       {error && (
-        <p id="pincode-error" className="text-sm text-red-600" role="alert">
+        <p id="pincode-error" className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -119,17 +119,18 @@ export function PincodeChecker({
         <div
           id="pincode-result"
           role="status"
-          className={`text-sm border p-3 rounded-none ${
+          aria-live="polite"
+          className={`text-sm border p-3 rounded-none transition-all ${
             result.serviceable
-              ? "border-green-200 bg-green-50 text-green-950"
-              : "border-red-200 bg-red-50 text-red-950"
+              ? "border-green-500/30 bg-green-50/70 text-green-950 dark:bg-green-950/30 dark:text-green-200"
+              : "border-destructive/30 bg-red-50/70 text-red-950 dark:bg-red-950/30 dark:text-red-200"
           }`}
         >
           <div className="flex items-start gap-2.5">
             {result.serviceable ? (
-              <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-700" />
+              <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600 dark:text-green-400" aria-hidden="true" />
             ) : (
-              <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-700" />
+              <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-destructive" aria-hidden="true" />
             )}
             <div className="min-w-0 space-y-1">
               <p className="font-medium leading-snug">
@@ -138,17 +139,17 @@ export function PincodeChecker({
                   : `Delivery not available for ${result.pincode}`}
               </p>
               {result.city && (
-                <p className="text-xs text-neutral-600">
+                <p className="text-xs text-muted-foreground">
                   {result.city}
                   {result.state ? `, ${result.state}` : ""}
                 </p>
               )}
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-neutral-600">
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                 <span>Prepaid: {result.prepaid ? "Yes" : "No"}</span>
                 <span>COD: {result.cod ? "Yes" : "No"}</span>
               </div>
               {result.message && (
-                <p className="text-xs text-neutral-500 pt-0.5">{result.message}</p>
+                <p className="text-xs text-muted-foreground pt-0.5">{result.message}</p>
               )}
             </div>
           </div>
@@ -160,6 +161,7 @@ export function PincodeChecker({
   if (compact) return content;
 
   return (
-    <div className="border border-neutral-200 bg-neutral-50/60 p-4 sm:p-5">{content}</div>
+    <div className="border border-border bg-card p-4 sm:p-5">{content}</div>
   );
 }
+

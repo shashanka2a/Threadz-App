@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { MyOrders } from "@/components/customer/my-orders";
 
+import MyOrdersLoading from "./loading";
+
 export default function MyOrdersPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -19,13 +21,9 @@ export default function MyOrdersPage() {
   }, [loading, user, router]);
 
   if (loading || !user) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center text-neutral-600">
-        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-        Loading orders...
-      </div>
-    );
+    return <MyOrdersLoading />;
   }
+
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">

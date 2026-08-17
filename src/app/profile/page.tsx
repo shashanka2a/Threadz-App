@@ -17,6 +17,8 @@ import {
 } from "@/components/customer/address-form-panel";
 import { createClient } from "@/lib/supabase/client";
 import type { SavedAddress } from "@/lib/addresses";
+import ProfileLoading from "./loading";
+
 
 const inputClass = "rounded-none mt-1.5 border-neutral-300 text-base min-h-11";
 
@@ -182,13 +184,10 @@ export default function ProfilePage() {
   };
 
   if (loading || !user) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center text-neutral-600">
-        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-        Loading profile...
-      </div>
-    );
+    return <ProfileLoading />;
   }
+
+
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">

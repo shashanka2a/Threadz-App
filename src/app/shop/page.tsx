@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import ShopContent from "./shop-content";
+import ShopLoading from "./loading";
 import { getCategories, getShopCategoryNames } from "@/lib/db/categories";
 import { getProducts } from "@/lib/db/products";
 
@@ -10,12 +11,9 @@ export default async function ShopPage() {
   const shopCategories = getShopCategoryNames(categoryRows);
 
   return (
-    <Suspense
-      fallback={
-        <div className="container mx-auto px-4 py-12 text-center">Loading shop...</div>
-      }
-    >
+    <Suspense fallback={<ShopLoading />}>
       <ShopContent products={products} shopCategories={shopCategories} />
     </Suspense>
   );
 }
+

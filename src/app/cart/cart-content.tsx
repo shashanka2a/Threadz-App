@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { CheckoutProgress } from "@/components/checkout/checkout-progress";
 import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 import { getSizeStock } from "@/lib/stock";
 import { Badge } from "@/components/ui/badge";
+import { ProductImage } from "@/components/product-image";
 import type { Product } from "@/types/product";
 
 type CartContentProps = {
@@ -42,7 +42,7 @@ export default function CartContent({ liveProducts }: CartContentProps) {
     }
 
     setIsCheckingOut(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     router.push("/checkout/shipping");
   };
 
@@ -50,12 +50,12 @@ export default function CartContent({ liveProducts }: CartContentProps) {
     return (
       <div className="container mx-auto px-4 py-20">
         <div className="text-center max-w-md mx-auto">
-          <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
-          <h2 className="text-3xl font-serif mb-4">Your Cart is Empty</h2>
-          <p className="text-neutral-600 mb-8">Start adding some products to your cart!</p>
+          <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" aria-hidden="true" />
+          <h1 className="text-3xl font-serif mb-4 text-foreground">Your Cart is Empty</h1>
+          <p className="text-muted-foreground mb-8">Start adding some products to your cart!</p>
           <Button
             onClick={() => router.push("/shop")}
-            className="bg-black text-white hover:bg-neutral-800 rounded-none"
+            className="bg-foreground text-background hover:bg-foreground/90 rounded-none px-8 h-11 transition-transform hover:scale-105"
           >
             Browse Products
           </Button>
@@ -69,9 +69,9 @@ export default function CartContent({ liveProducts }: CartContentProps) {
       <Button
         variant="ghost"
         onClick={() => router.push("/shop")}
-        className="mb-8 rounded-none"
+        className="mb-8 rounded-none text-foreground"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
         Continue Shopping
       </Button>
 
@@ -80,7 +80,9 @@ export default function CartContent({ liveProducts }: CartContentProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h1 className="text-2xl sm:text-3xl font-serif">Shopping Cart</h1>
+            <h1 className="text-2xl sm:text-3xl font-serif text-foreground">
+              Shopping Cart ({cartItems.reduce((acc, i) => acc + i.cartQuantity, 0)})
+            </h1>
             <Button
               variant="outline"
               size="sm"
@@ -88,13 +90,13 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                 clearCart();
                 toast.success("Cart cleared");
               }}
-              className="rounded-none w-full sm:w-auto"
+              className="rounded-none w-full sm:w-auto border-border text-foreground hover:bg-muted"
             >
               Clear Cart
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4" role="list" aria-label="Cart items">
             {cartItems.map((item) => {
               const maxQty = getSizeStock(item, item.selectedSize);
               const atMax = item.cartQuantity >= maxQty;
@@ -103,16 +105,15 @@ export default function CartContent({ liveProducts }: CartContentProps) {
               return (
                 <Card
                   key={`${item.id}-${item.selectedSize}`}
-                  className="border-neutral-200 rounded-none"
+                  className="border-border rounded-none bg-card overflow-hidden transition-all hover:shadow-md"
+                  role="listitem"
                 >
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative w-full sm:w-24 h-48 sm:h-24 bg-neutral-100 overflow-hidden flex-shrink-0">
-                        <Image
+                      <div className="relative w-full sm:w-24 h-48 sm:h-24 bg-muted/40 overflow-hidden shrink-0 border border-border">
+                        <ProductImage
                           src={item.image}
                           alt={item.name}
-                          fill
-                          className="object-cover"
                           sizes="96px"
                         />
                       </div>
@@ -120,12 +121,12 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                       <div className="flex-1">
                         <div className="flex justify-between mb-2">
                           <div>
-                            <h3 className="text-lg">{item.name}</h3>
-                            <p className="text-sm text-neutral-600">
+                            <h2 className="text-lg font-medium text-card-foreground">{item.name}</h2>
+                            <p className="text-sm text-muted-foreground">
                               {item.color} • Size: {item.selectedSize}
                             </p>
                             {unavailable && (
-                              <Badge className="mt-1 rounded-none text-[10px] bg-red-100 text-red-800 hover:bg-red-100">
+                              <Badge className="mt-1 rounded-none text-[10px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
                                 No longer in stock — remove to continue
                               </Badge>
                             )}
@@ -133,10 +134,15 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => removeFromCart(item.id, item.selectedSize)}
-                            className="rounded-none"
+                            aria-label={`Remove ${item.name} size ${item.selectedSize} from cart`}
+                            onClick={() => {
+                              removeFromCart(item.id, item.selectedSize);
+                              toast.success(`Removed ${item.name} from cart`);
+                            }}
+                            className="rounded-none text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            <span className="sr-only">Remove {item.name}</span>
                           </Button>
                         </div>
 
@@ -145,6 +151,7 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                             <Button
                               variant="outline"
                               size="icon"
+                              aria-label={`Decrease quantity of ${item.name}`}
                               onClick={() =>
                                 updateQuantity(
                                   item.id,
@@ -152,14 +159,20 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                                   item.cartQuantity - 1
                                 )
                               }
-                              className="h-10 w-10 rounded-none border-neutral-300"
+                              className="h-10 w-10 rounded-none border-border font-bold text-foreground hover:bg-muted"
                             >
                               -
                             </Button>
-                            <span className="w-8 text-center">{item.cartQuantity}</span>
+                            <span
+                              className="w-8 text-center text-foreground font-medium tabular-nums"
+                              aria-label={`Quantity: ${item.cartQuantity}`}
+                            >
+                              {item.cartQuantity}
+                            </span>
                             <Button
                               variant="outline"
                               size="icon"
+                              aria-label={`Increase quantity of ${item.name}`}
                               disabled={atMax || unavailable}
                               onClick={() => {
                                 const ok = updateQuantity(
@@ -173,15 +186,15 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                                   );
                                 }
                               }}
-                              className="h-10 w-10 rounded-none border-neutral-300 disabled:opacity-40"
+                              className="h-10 w-10 rounded-none border-border font-bold text-foreground hover:bg-muted disabled:opacity-40"
                             >
                               +
                             </Button>
                           </div>
 
                           <div className="text-left sm:text-right">
-                            <p className="text-lg">₹{item.price * item.cartQuantity}</p>
-                            <p className="text-xs text-neutral-500">₹{item.price} each</p>
+                            <p className="text-lg font-medium text-card-foreground">₹{item.price * item.cartQuantity}</p>
+                            <p className="text-xs text-muted-foreground">₹{item.price} each</p>
                           </div>
                         </div>
                       </div>
@@ -194,34 +207,34 @@ export default function CartContent({ liveProducts }: CartContentProps) {
         </div>
 
         <div>
-          <Card className="border-neutral-200 rounded-none lg:sticky lg:top-20">
+          <Card className="border-border rounded-none bg-card lg:sticky lg:top-24">
             <CardContent className="p-6">
-              <h2 className="text-xl font-serif mb-6">Order Summary</h2>
+              <h2 className="text-xl font-serif mb-6 text-foreground">Order Summary</h2>
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span>{formatInr(cartTotal)}</span>
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground font-medium">{formatInr(cartTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-neutral-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>GST (18%, included)</span>
                   <span>{formatInr(tax)}</span>
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="flex justify-between text-lg font-medium">
+                <div className="flex justify-between text-lg font-medium text-foreground">
                   <span>Total</span>
                   <span>{formatInr(total)}</span>
                 </div>
-                <p className="text-xs text-neutral-500">All prices inclusive of taxes</p>
+                <p className="text-xs text-muted-foreground">All prices inclusive of taxes</p>
               </div>
 
               <Button
                 size="lg"
                 onClick={handleCheckout}
                 disabled={isCheckingOut || hasUnavailableItems}
-                className="w-full bg-black text-white hover:bg-neutral-800 rounded-none disabled:opacity-50"
+                className="w-full bg-foreground text-background hover:bg-foreground/90 rounded-none h-12 text-base font-medium transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
               >
                 {isCheckingOut ? (
                   <>
@@ -233,12 +246,13 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                 )}
               </Button>
 
-              <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200">
-                <p className="text-xs text-neutral-600">
-                  • Free delivery applied at checkout
+              <div className="mt-6 p-4 bg-muted/30 border border-border">
+                <p className="text-xs text-muted-foreground space-y-1">
+                  <span>• Free delivery applied at checkout</span>
                   <br />
-                  • 7-day return policy
-                  <br />• Secure payment processing
+                  <span>• 7-day return policy</span>
+                  <br />
+                  <span>• Secure payment processing</span>
                 </p>
               </div>
             </CardContent>
@@ -248,3 +262,4 @@ export default function CartContent({ liveProducts }: CartContentProps) {
     </div>
   );
 }
+

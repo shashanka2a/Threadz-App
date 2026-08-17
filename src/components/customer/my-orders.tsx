@@ -23,6 +23,7 @@ import {
   resolveCustomerOrderStatusKey,
 } from "@/lib/customer-order-status";
 import type { TrackingResult } from "@/types/shipment";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("en-IN", {
@@ -32,7 +33,34 @@ function formatDate(iso: string) {
   });
 }
 
+function MyOrdersSkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-label="Loading orders">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} className="border border-border bg-card p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-border">
+            <div className="space-y-1">
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-3.5 w-24" />
+            </div>
+            <Skeleton className="h-6 w-28 rounded-full" />
+          </div>
+          <div className="flex gap-4 items-center">
+            <Skeleton className="w-16 h-16 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3.5 w-32" />
+            </div>
+            <Skeleton className="h-5 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function MyOrders() {
+
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -92,13 +120,10 @@ export function MyOrders() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12 text-neutral-600">
-        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-        Loading orders...
-      </div>
-    );
+    return <MyOrdersSkeleton />;
   }
+
+
 
   if (orders.length === 0) {
     return (
