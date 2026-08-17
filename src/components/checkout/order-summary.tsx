@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 
 type OrderSummaryProps = {
@@ -16,71 +16,90 @@ export function OrderSummary({
   title = "Order Summary",
   deliveryLoading = false,
 }: OrderSummaryProps) {
-  const { cartTotal, cartItems, deliveryFee } = useCart();
+  const { rawCartTotal, bundleDiscount, cartItems, deliveryFee } = useCart();
 
   const { tax, total, quotedDelivery } = useMemo(
-    () => computeCheckoutTotals(cartTotal, deliveryFee),
-    [cartTotal, deliveryFee],
+    () => computeCheckoutTotals(rawCartTotal, deliveryFee, bundleDiscount),
+    [rawCartTotal, deliveryFee, bundleDiscount],
   );
 
   const showDeliveryPromo = deliveryLoading || quotedDelivery > 0;
 
   return (
-    <Card className="border-neutral-200 rounded-none">
+    <Card className="border-border rounded-none bg-card">
       <CardContent className="p-6">
-        <h2 className="text-xl font-serif mb-6">{title}</h2>
+        <h2 className="text-xl font-serif mb-6 text-foreground">{title}</h2>
 
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm">
-            <span>Items</span>
-            <span>{cartItems.reduce((sum, i) => sum + i.cartQuantity, 0)}</span>
+            <span className="text-muted-foreground">Items</span>
+            <span className="text-foreground font-medium">{cartItems.reduce((sum, i) => sum + i.cartQuantity, 0)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Subtotal</span>
-            <span>{formatInr(cartTotal)}</span>
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-foreground font-medium">{formatInr(rawCartTotal)}</span>
           </div>
 
-          {showDeliveryPromo && (
-            <>
-              <div className="flex justify-between text-sm gap-4">
-                <span>Delivery fee</span>
-                <span className="text-right shrink-0">
-                  {deliveryLoading ? (
-                    <span className="inline-flex items-center gap-1.5 text-neutral-500">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Calculating...
-                    </span>
-                  ) : (
-                    <span className="text-neutral-400 line-through tabular-nums">
-                      {formatInr(quotedDelivery)}
-                    </span>
-                  )}
-                </span>
-              </div>
-            </>
+          {bundleDiscount > 0 && (
+            <div className="flex justify-between text-sm text-green-600 dark:text-green-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                Bundle Offer (3 for ₹999)
+              </span>
+              <span>-{formatInr(bundleDiscount)}</span>
+            </div>
           )}
 
-          <div className="flex justify-between text-sm text-neutral-600">
+          {showDeliveryPromo && (
+            <div className="flex justify-between text-sm gap-4">
+              <span className="text-muted-foreground">Delivery fee</span>
+              <span className="text-right shrink-0">
+                {deliveryLoading ? (
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    Calculating...
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground line-through tabular-nums">
+                    {formatInr(quotedDelivery)}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+
+          <div className="flex justify-between text-sm text-muted-foreground">
             <span>GST (18%, included)</span>
             <span>{formatInr(tax)}</span>
           </div>
 
           <Separator className="my-4" />
 
-          <div className="flex justify-between text-lg font-medium">
+          <div className="flex justify-between text-lg font-medium text-foreground">
             <span>Total</span>
-            <span>{formatInr(total)}</span>
+            <div className="text-right">
+              <span>{formatInr(total)}</span>
+              {bundleDiscount > 0 && (
+                <p className="text-xs text-green-600 dark:text-green-400 font-normal">
+                  You save {formatInr(bundleDiscount)}
+                </p>
+              )}
+            </div>
           </div>
-          <p className="text-xs text-neutral-500">All product prices inclusive of taxes</p>
+          <p className="text-xs text-muted-foreground">All product prices inclusive of taxes</p>
         </div>
 
-        <p className="text-xs text-neutral-600">
-          • Free delivery
-          <br />
-          • 7-day return policy
-          <br />• Secure payment processing
-        </p>
+        <div className="p-3.5 bg-muted/30 border border-border">
+          <p className="text-xs text-muted-foreground space-y-1">
+            <span>• Free delivery applied</span>
+            <br />
+            <span>• 7-day return policy</span>
+            <br />
+            <span>• Secure payment processing</span>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
 }
+

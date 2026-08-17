@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Loader2, Trash2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, ShoppingBag, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { CheckoutProgress } from "@/components/checkout/checkout-progress";
-import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
+import { computeCheckoutTotals, formatInr, is180GsmItem } from "@/lib/pricing";
 import { getSizeStock } from "@/lib/stock";
 import { Badge } from "@/components/ui/badge";
 import { ProductImage } from "@/components/product-image";
@@ -21,9 +22,18 @@ type CartContentProps = {
 
 export default function CartContent({ liveProducts }: CartContentProps) {
   const router = useRouter();
-  const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart, syncCartStock } =
-    useCart();
-  const { tax, total } = computeCheckoutTotals(cartTotal);
+  const {
+    cartItems,
+    removeFromCart,
+    updateQuantity,
+    rawCartTotal,
+    bundleDiscount,
+    bundleOffer,
+    clearCart,
+    syncCartStock,
+  } = useCart();
+
+  const { tax, total } = computeCheckoutTotals(rawCartTotal, 0, bundleDiscount);
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -77,6 +87,73 @@ export default function CartContent({ liveProducts }: CartContentProps) {
 
       <CheckoutProgress current="cart" />
 
+      {/* Interactive Bundle Offer Progress Banner */}
+      <div className="mb-8 border border-border bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-amber-950/20 p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5 flex-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-foreground">
+                {bundleOffer.applied
+                  ? `🎉 Bundle Offer Applied: ${bundleOffer.bundleCount}x (3 for ₹999)`
+                  : "🔥 Special Bundle Offer: 3 T-Shirts for ₹999"}
+              </h2>
+              {bundleOffer.applied && (
+                <Badge className="bg-green-600 text-white rounded-none text-xs hover:bg-green-600">
+                  Saved {formatInr(bundleDiscount)}
+                </Badge>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              {bundleOffer.applied && bundleOffer.itemsNeededForNext === 0 ? (
+                <>You qualify for the 3 for ₹999 deal on all {bundleOffer.eligibleCount} 180 GSM tees! Add 3 more to save another ₹498.</>
+              ) : bundleOffer.eligibleCount > 0 ? (
+                <>
+                  You have <span className="font-medium text-foreground">{bundleOffer.eligibleCount}</span> qualifying 180 GSM tee{bundleOffer.eligibleCount > 1 ? "s" : ""}.
+                  Add <span className="font-bold text-foreground">{bundleOffer.itemsNeededForNext}</span> more to get 3 for ₹999 (regular ₹499 each)!
+                </>
+              ) : (
+                <>Add any 3 180 GSM T-shirts to your cart to get them for ₹999 instead of ₹1,497.</>
+              )}
+            </p>
+
+            {/* Visual Progress Bar */}
+            <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden mt-2">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  bundleOffer.applied
+                    ? "bg-green-600 dark:bg-green-500"
+                    : "bg-gradient-to-r from-amber-500 to-orange-500"
+                }`}
+                style={{
+                  width: `${
+                    bundleOffer.eligibleCount === 0
+                      ? 0
+                      : bundleOffer.itemsNeededForNext === 0
+                      ? 100
+                      : Math.min(100, Math.round(((3 - bundleOffer.itemsNeededForNext) / 3) * 100))
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="shrink-0 self-start sm:self-center">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="rounded-none border-border text-foreground hover:bg-background whitespace-nowrap text-xs font-medium"
+            >
+              <Link href="/shop">
+                Browse 180 GSM Tees <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -101,6 +178,7 @@ export default function CartContent({ liveProducts }: CartContentProps) {
               const maxQty = getSizeStock(item, item.selectedSize);
               const atMax = item.cartQuantity >= maxQty;
               const unavailable = maxQty <= 0;
+              const isEligibleForBundle = is180GsmItem(item);
 
               return (
                 <Card
@@ -125,11 +203,18 @@ export default function CartContent({ liveProducts }: CartContentProps) {
                             <p className="text-sm text-muted-foreground">
                               {item.color} • Size: {item.selectedSize}
                             </p>
-                            {unavailable && (
-                              <Badge className="mt-1 rounded-none text-[10px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
-                                No longer in stock — remove to continue
-                              </Badge>
-                            )}
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {isEligibleForBundle && (
+                                <Badge variant="secondary" className="rounded-none text-[10px] bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
+                                  ⚡ 3 for ₹999 Eligible
+                                </Badge>
+                              )}
+                              {unavailable && (
+                                <Badge className="rounded-none text-[10px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+                                  No longer in stock — remove to continue
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
@@ -214,8 +299,19 @@ export default function CartContent({ liveProducts }: CartContentProps) {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground font-medium">{formatInr(cartTotal)}</span>
+                  <span className="text-foreground font-medium">{formatInr(rawCartTotal)}</span>
                 </div>
+
+                {bundleDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 dark:text-green-400 font-medium">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      Bundle Offer (3 for ₹999)
+                    </span>
+                    <span>-{formatInr(bundleDiscount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>GST (18%, included)</span>
                   <span>{formatInr(tax)}</span>
@@ -225,7 +321,14 @@ export default function CartContent({ liveProducts }: CartContentProps) {
 
                 <div className="flex justify-between text-lg font-medium text-foreground">
                   <span>Total</span>
-                  <span>{formatInr(total)}</span>
+                  <div className="text-right">
+                    <span>{formatInr(total)}</span>
+                    {bundleDiscount > 0 && (
+                      <p className="text-xs text-green-600 dark:text-green-400 font-normal">
+                        Total savings: {formatInr(bundleDiscount)}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">All prices inclusive of taxes</p>
               </div>
@@ -262,4 +365,5 @@ export default function CartContent({ liveProducts }: CartContentProps) {
     </div>
   );
 }
+
 

@@ -31,7 +31,7 @@ function formatAddressLine(address: NonNullable<ReturnType<typeof useCart>["ship
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { cartItems, cartTotal, shippingAddress, deliveryFee, clearCart, clearShippingAddress } =
+  const { cartItems, rawCartTotal, bundleDiscount, shippingAddress, deliveryFee, clearCart, clearShippingAddress } =
     useCart();
   const [isChecking, setIsChecking] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -54,9 +54,10 @@ export default function PaymentPage() {
   }, []);
 
   const { subtotal, tax, total, quotedDelivery } = useMemo(
-    () => computeCheckoutTotals(cartTotal, deliveryFee),
-    [cartTotal, deliveryFee],
+    () => computeCheckoutTotals(rawCartTotal, deliveryFee, bundleDiscount),
+    [rawCartTotal, deliveryFee, bundleDiscount],
   );
+
 
   const payAndProceed = async () => {
     if (!shippingAddress) return;

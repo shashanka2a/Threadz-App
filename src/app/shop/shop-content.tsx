@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProductRating } from "@/components/product-rating";
+import { Sparkles, Tag } from "lucide-react";
+import { is180GsmItem } from "@/lib/pricing";
 import {
   Select,
   SelectContent,
@@ -23,13 +25,15 @@ type ShopContentProps = {
   shopCategories: string[];
 };
 
+const BUNDLE_FILTER_LABEL = "⚡ 3 for ₹999 Offer";
+
 export default function ShopContent({ products, shopCategories }: ShopContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
 
   const colors = [...new Set(products.map((p) => p.color))];
-  const categories = shopCategories;
+  const filterCategories = [...shopCategories, BUNDLE_FILTER_LABEL];
 
   const [selectedCategory, setSelectedCategory] = useState(
     categoryParam || "All Products"
@@ -37,9 +41,13 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
   const [selectedColor, setSelectedColor] = useState("All Colors");
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "All Products" ||
-      product.category === selectedCategory;
+    let matchesCategory = true;
+    if (selectedCategory === BUNDLE_FILTER_LABEL) {
+      matchesCategory = is180GsmItem(product);
+    } else if (selectedCategory !== "All Products") {
+      matchesCategory = product.category === selectedCategory;
+    }
+
     const matchesColor =
       selectedColor === "All Colors" || product.color === selectedColor;
     return matchesCategory && matchesColor;
@@ -47,7 +55,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="mb-8 md:mb-12 text-center">
+      <div className="mb-6 md:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4 text-foreground">
           Shop Collection
         </h1>
@@ -56,14 +64,41 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
         </p>
       </div>
 
+      {/* Promotional Bundle Offer Banner */}
+      <div className="mb-8 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 text-center sm:text-left">
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              🔥 Special Bundle Offer: Any 3 T-Shirts (180 GSM) for ₹999!
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Mix and match any colors or sizes. Regular ₹499 each — save ₹498 automatically in cart!
+            </p>
+          </div>
+        </div>
+
+        <Button
+          size="sm"
+          onClick={() => setSelectedCategory(BUNDLE_FILTER_LABEL)}
+          className="rounded-none bg-foreground text-background hover:bg-foreground/90 shrink-0 text-xs h-9 px-4 font-medium"
+        >
+          View 180 GSM Tees
+        </Button>
+      </div>
+
       {/* Category Quick Filter Pills */}
       <div
         className="flex items-center justify-center gap-2 mb-6 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
         aria-label="Filter by category"
       >
-        {categories.map((category) => {
+        {filterCategories.map((category) => {
           const isActive = selectedCategory === category;
+          const isBundlePill = category === BUNDLE_FILTER_LABEL;
+
           return (
             <button
               key={category}
@@ -73,6 +108,8 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
               className={`px-4 py-2 text-xs uppercase tracking-wider font-medium whitespace-nowrap transition-all duration-200 border ${
                 isActive
                   ? "bg-foreground text-background border-foreground shadow-sm"
+                  : isBundlePill
+                  ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
                   : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/40"
               }`}
             >
@@ -93,7 +130,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((category) => (
+              {filterCategories.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
                 </SelectItem>
@@ -139,6 +176,7 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
           );
           const isBestseller = index % 5 === 0 || index % 7 === 0;
           const isAboveTheFold = index < 4;
+          const isEligibleForBundle = is180GsmItem(product);
 
           return (
             <Link
@@ -161,6 +199,11 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
                         BESTSELLER
                       </Badge>
                     )}
+                    {isEligibleForBundle && (
+                      <Badge className="absolute bottom-3 left-3 bg-amber-500 text-black rounded-none text-[10px] font-bold shadow-sm z-20">
+                        3 FOR ₹999
+                      </Badge>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -180,7 +223,9 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
                       <span className="text-sm text-muted-foreground line-through">₹{product.mrp}</span>
                       <span className="text-sm font-medium text-green-600 dark:text-green-400">{discount}% OFF</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">Lowest price in last 30 days</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isEligibleForBundle ? "Buy 3 for ₹999 in cart" : "Lowest price in last 30 days"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -208,4 +253,5 @@ export default function ShopContent({ products, shopCategories }: ShopContentPro
     </div>
   );
 }
+
 

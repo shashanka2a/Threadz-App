@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { CartItem, Product } from "../types/product";
 import { canAddToCart, getSizeStock } from "@/lib/stock";
+import { computeBundleOffer, type BundleOfferInfo } from "@/lib/pricing";
 
 export type ShippingAddress = {
   fullName: string;
@@ -29,10 +30,18 @@ interface CartContextType {
   deliveryFee: number;
   setDeliveryFee: (fee: number) => void;
   cartCount: number;
+  /** Effective cart total after bundle offers and discounts are subtracted */
   cartTotal: number;
+  /** Raw sum of item price * quantity before discounts */
+  rawCartTotal: number;
+  /** Total discount from bundle offers */
+  bundleDiscount: number;
+  /** Bundle offer progress, eligibility, and savings info */
+  bundleOffer: BundleOfferInfo;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
 
 const STORAGE_KEY = "threadz.checkout.shippingAddress";
 const DELIVERY_FEE_KEY = "threadz.checkout.deliveryFee";
@@ -197,10 +206,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.cartQuantity, 0);
-  const cartTotal = cartItems.reduce(
+  const rawCartTotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.cartQuantity,
     0
   );
+
+  const bundleOffer = computeBundleOffer(cartItems);
+  const bundleDiscount = bundleOffer.bundleDiscount;
+  const cartTotal = Math.max(0, rawCartTotal - bundleDiscount);
 
   return (
     <CartContext.Provider
@@ -218,12 +231,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setDeliveryFee,
         cartCount,
         cartTotal,
+        rawCartTotal,
+        bundleDiscount,
+        bundleOffer,
       }}
     >
       {children}
     </CartContext.Provider>
   );
 }
+
 
 export function useCart() {
   const context = useContext(CartContext);

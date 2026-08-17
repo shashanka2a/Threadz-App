@@ -19,10 +19,13 @@ import {
   Banknote,
   Check,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
+import { is180GsmItem } from "@/lib/pricing";
 import { ProductImage } from "@/components/product-image";
+
 import { ProductRating } from "@/components/product-rating";
 import { KeyHighlights } from "@/components/product/key-highlights";
 import { PincodeChecker } from "@/components/shipping/pincode-checker";
@@ -218,23 +221,46 @@ export default function ProductDetailContent({
           <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-6">Lowest price in last 30 days</p>
 
           {/* Offers Card */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-3 text-foreground">Save extra with these offers</h3>
-            <Card className="border-border rounded-none bg-amber-50/60 dark:bg-amber-950/20">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Banknote className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Get 5% up to ₹250 only</p>
-                    <p className="text-xs text-muted-foreground">
-                      Pay Any 3 Item on ₹700 (Get Extra 5min, Hurry!)
-                    </p>
+          <div className="mb-6 space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Save extra with these offers</h3>
+            
+            {is180GsmItem(product) ? (
+              <Card className="border-amber-500/30 rounded-none bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-amber-950/30">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">Bundle Offer: 3 for ₹999</p>
+                        <Badge className="bg-green-600 text-white rounded-none text-[10px] hover:bg-green-600">
+                          Save ₹498
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Buy any 3 180 GSM T-shirts (mix and match colors/sizes) for just ₹999 instead of ₹1,497. Discount auto-applies in cart!
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            <p className="text-xs text-muted-foreground mt-2">Offer will be auto-applied</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-border rounded-none bg-muted/40">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Banknote className="h-5 w-5 text-foreground mt-0.5 shrink-0" aria-hidden="true" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Free Shipping & Returns</p>
+                      <p className="text-xs text-muted-foreground">
+                        All orders include free shipping and 7-day hassle-free returns.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            <p className="text-xs text-muted-foreground">Offers are automatically applied at checkout</p>
           </div>
+
 
           {/* Color Variants (Accessible Radiogroup) */}
           <div className="mb-6">
