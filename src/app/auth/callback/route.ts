@@ -17,14 +17,23 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
+  const errorParam = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+
   const fallbackDestination = type === "recovery" ? "/reset-password" : "/profile";
   const next = safeNextPath(searchParams.get("next"), fallbackDestination);
   const origin = getRequestOrigin(request);
   const redirectUrl = `${origin}${next}`;
 
-  if (!code && !(tokenHash && type)) {
+  // If Supabase returned an explicit error parameter
+  if (errorParam) {
     const fallbackPath = next === "/reset-password" || type === "recovery" ? "/forgot-password" : "/login";
-    return NextResponse.redirect(`${origin}${fallbackPath}?error=auth_callback_failed`);
+    return NextResponse.redirect(`${origin}${fallbackPath}?error=${encodeURIComponent(errorDescription || errorParam)}`);
+  }
+
+  // If neither code nor tokenHash is present, forward to destination (allows client-side hash auth)
+  if (!code && !(tokenHash && type)) {
+    return NextResponse.redirect(redirectUrl);
   }
 
   const response = NextResponse.redirect(redirectUrl);
@@ -50,8 +59,8 @@ export async function GET(request: NextRequest) {
       });
 
   if (error) {
-    const fallbackPath = next === "/reset-password" ? "/forgot-password" : "/login";
-    return NextResponse.redirect(`${origin}${fallbackPath}?error=auth_callback_failed`);
+    const fallbackPath = next === "/reset-password" || type === "recovery" ? "/forgot-password" : "/login";
+    return NextResponse.redirect(`${origin}${fallbackPath}?error=${encodeURIComponent(error.message)}`);
   }
 
   return response;

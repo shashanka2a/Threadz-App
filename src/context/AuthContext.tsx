@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const hash = window.location.hash || "";
       const search = window.location.search || "";
       
-      const isRecoveryHash = hash.includes("type=recovery") || (hash.includes("access_token=") && hash.includes("refresh_token="));
+      const isRecoveryHash = hash.includes("type=recovery");
       const isRecoverySearch =
         search.includes("type=recovery") &&
         !window.location.pathname.startsWith("/auth/callback");
@@ -152,6 +152,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "PASSWORD_RECOVERY") {
         if (typeof window !== "undefined" && window.location.pathname !== "/reset-password") {
           window.location.href = "/reset-password";
+        }
+      }
+
+      if (event === "SIGNED_IN") {
+        if (typeof window !== "undefined" && window.location.hash.includes("type=signup")) {
+          window.history.replaceState({}, "", window.location.pathname + window.location.search);
         }
       }
 
