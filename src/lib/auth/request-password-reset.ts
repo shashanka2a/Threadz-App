@@ -41,7 +41,7 @@ async function sendRecoveryEmail(
 
 export async function requestPasswordReset(
   email: string,
-  _origin?: string
+  origin?: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -49,7 +49,8 @@ export async function requestPasswordReset(
     return { ok: false, error: "Enter a valid email address" };
   }
 
-  const redirectTo = getPasswordResetRedirectUrl(getSiteUrl());
+  const redirectTo = getPasswordResetRedirectUrl(origin || getSiteUrl());
+
 
   if (isSmtpConfigured()) {
     const sent = await sendRecoveryEmail(normalizedEmail, redirectTo);
