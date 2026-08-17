@@ -10,6 +10,7 @@ import {
   Menu,
   User,
   Package,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
@@ -26,6 +27,7 @@ import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { UserAccountButton } from "@/components/user-account-button";
 import { useAuth } from "@/context/AuthContext";
 import { RouteProgressBar } from "@/components/ui/route-progress-bar";
+
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -225,10 +227,25 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
         Skip to main content
       </a>
 
+      {/* Top Announcement Bar for Introductory Offer */}
+      <aside aria-label="Introductory announcement" className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white text-xs py-2 px-4 text-center font-medium tracking-wide shadow-sm relative z-50">
+        <Link
+          href="/shop?category=Plain+T-Shirts"
+          className="inline-flex items-center justify-center gap-2 hover:opacity-95 transition-opacity"
+        >
+          <Sparkles className="h-3.5 w-3.5 shrink-0 animate-pulse" aria-hidden="true" />
+          <span>
+            <strong className="font-semibold">Introductory Offer:</strong> Any 3 T-Shirts (180 GSM) for ₹999 • Save ₹498 automatically
+          </span>
+          <span className="underline underline-offset-2 font-bold ml-1 hidden sm:inline">Shop Now →</span>
+        </Link>
+      </aside>
+
       <header
         role="banner"
         className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-colors"
       >
+
         <div className="container mx-auto px-4 py-3 md:py-4">
           {/* Mobile header */}
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 md:hidden">
