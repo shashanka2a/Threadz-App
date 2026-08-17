@@ -17,12 +17,13 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const next = safeNextPath(searchParams.get("next"), "/profile");
+  const fallbackDestination = type === "recovery" ? "/reset-password" : "/profile";
+  const next = safeNextPath(searchParams.get("next"), fallbackDestination);
   const origin = getRequestOrigin(request);
   const redirectUrl = `${origin}${next}`;
 
   if (!code && !(tokenHash && type)) {
-    const fallbackPath = next === "/reset-password" ? "/forgot-password" : "/login";
+    const fallbackPath = next === "/reset-password" || type === "recovery" ? "/forgot-password" : "/login";
     return NextResponse.redirect(`${origin}${fallbackPath}?error=auth_callback_failed`);
   }
 

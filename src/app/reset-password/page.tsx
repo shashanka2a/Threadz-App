@@ -43,7 +43,7 @@ function ResetPasswordForm() {
       const refreshToken = hashParams.get("refresh_token");
       const type = hashParams.get("type");
 
-      if (accessToken && refreshToken && type === "recovery") {
+      if (accessToken && refreshToken && (type === "recovery" || !type)) {
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -55,16 +55,16 @@ function ResetPasswordForm() {
         }
       }
 
-      // 2. Check query params (OTP token_hash or PKCE code directly on /reset-password)
+      // 2. Check query params (OTP token_hash, token, or PKCE code directly on /reset-password)
       const params = new URLSearchParams(window.location.search);
-      const tokenHash = params.get("token_hash");
+      const tokenHash = params.get("token_hash") || params.get("token");
       const otpType = params.get("type");
       const code = params.get("code");
 
-      if (tokenHash && otpType === "recovery") {
+      if (tokenHash) {
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
-          type: "recovery",
+          type: (otpType as "recovery") || "recovery",
         });
         if (!error) {
           window.history.replaceState({}, "", "/reset-password");
@@ -82,11 +82,19 @@ function ResetPasswordForm() {
         }
       }
 
-      // 3. Check existing cookie-based session (set via /auth/callback)
+      // 3. Check existing cookie-based or memory session
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      finishCheck(Boolean(session));
+      if (session) {
+        finishCheck(true);
+        return;
+      }
+
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      finishCheck(Boolean(currentUser));
     };
 
     void checkSession();

@@ -114,6 +114,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Detect if landing on any page with password recovery parameters in hash or query
+    if (typeof window !== "undefined" && window.location.pathname !== "/reset-password") {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      
+      const isRecoveryHash = hash.includes("type=recovery") || (hash.includes("access_token=") && hash.includes("refresh_token="));
+      const isRecoverySearch =
+        search.includes("type=recovery") &&
+        !window.location.pathname.startsWith("/auth/callback");
+
+      if (isRecoveryHash || isRecoverySearch) {
+        window.location.replace(`/reset-password${search}${hash}`);
+        return;
+      }
+    }
+
     const init = async () => {
       const {
         data: { session },
@@ -132,7 +148,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        if (typeof window !== "undefined" && window.location.pathname !== "/reset-password") {
+          window.location.href = "/reset-password";
+        }
+      }
+
       setUser(session?.user ?? null);
       if (session?.user) {
         void Promise.all([refreshProfile(), refreshAddresses()]);
