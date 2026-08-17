@@ -22,13 +22,57 @@ export default function HomeContent({ products }: HomeContentProps) {
   const featuredProducts = products.slice(0, 9);
 
   return (
-    <div className="pt-4 sm:pt-6">
-      {/* 1. TOP SHOWCASE BANNER: Introductory Offer */}
-      <section className="container mx-auto px-4 mb-10 md:mb-14" aria-labelledby="introductory-offer-heading">
-        <div className="relative overflow-hidden border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/15 via-background to-orange-500/10 dark:from-amber-950/40 dark:via-card dark:to-orange-950/20 p-6 sm:p-8 md:p-10 shadow-lg">
+    <div>
+      {/* 1. Hero Section */}
+      <section className="container mx-auto px-4 pt-12 pb-10 md:pt-20 md:pb-16" aria-labelledby="hero-heading">
+        <div className="text-center max-w-4xl mx-auto">
+          <Link
+            href="/shop?category=Plain+T-Shirts"
+            className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 text-amber-800 dark:text-amber-300 text-xs font-semibold uppercase tracking-widest hover:scale-105 transition-all shadow-sm group"
+          >
+            <span>Introductory Offer: Any 3 T-Shirts (180 GSM) for ₹999</span>
+            <ArrowRight className="h-3 w-3 ml-0.5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+          </Link>
+
+          <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6">
+            <span className="font-serif text-foreground">Premium.</span>
+            <br />
+            <span className="font-serif italic text-muted-foreground">Everyday T-Shirts.</span>
+          </h1>
+          <p className="text-lg text-muted-foreground mb-3 max-w-2xl mx-auto">
+            Plain and oversized cotton t-shirts in rich colours and durable GSM fabrics.
+          </p>
+          <p className="text-base text-muted-foreground/90 mb-8 max-w-xl mx-auto">
+            Built for everyday luxury, bulk orders, and merch drops.
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Button
+              size="lg"
+              onClick={() => router.push("/shop")}
+              className="bg-foreground text-background hover:bg-foreground/90 px-8 rounded-none transition-transform hover:scale-105 active:scale-95 h-12 text-base font-medium"
+            >
+              Shop Collection
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => router.push("/ai-studio")}
+              variant="outline"
+              className="border-foreground text-foreground hover:bg-accent px-8 rounded-none transition-transform hover:scale-105 active:scale-95 h-12 text-base font-medium"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Try AI Studio
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Featured Introductory Offer Banner Section */}
+      <section className="container mx-auto px-4 mb-16" aria-labelledby="introductory-offer-heading">
+        <div className="relative overflow-hidden border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/10 dark:from-amber-950/30 dark:via-card dark:to-orange-950/20 p-6 sm:p-8 md:p-12 shadow-sm">
           {/* Subtle glowing accents */}
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-56 h-56 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4 text-center lg:text-left">
@@ -71,7 +115,6 @@ export default function HomeContent({ products }: HomeContentProps) {
                 </Button>
               </div>
             </div>
-
 
             {/* Qualifying 180 GSM Thumbnails Showcase */}
             <div className="lg:col-span-5">
@@ -122,54 +165,8 @@ export default function HomeContent({ products }: HomeContentProps) {
         </div>
       </section>
 
-      {/* 2. Hero Section */}
-      <section className="container mx-auto px-4 pt-4 pb-12 md:pt-8 md:pb-20" aria-labelledby="hero-heading">
-        <div className="text-center max-w-4xl mx-auto">
-          <Link
-            href="/shop?category=Plain+T-Shirts"
-            className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 text-amber-800 dark:text-amber-300 text-xs font-semibold uppercase tracking-widest hover:scale-105 transition-all shadow-sm group"
-          >
-            <span>Introductory Offer: Any 3 T-Shirts (180 GSM) for ₹999</span>
-            <ArrowRight className="h-3 w-3 ml-0.5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-          </Link>
-
-
-          <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6">
-            <span className="font-serif text-foreground">Premium.</span>
-            <br />
-            <span className="font-serif italic text-muted-foreground">Everyday T-Shirts.</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mb-3 max-w-2xl mx-auto">
-            Plain and oversized cotton t-shirts in rich colours and durable GSM fabrics.
-          </p>
-          <p className="text-base text-muted-foreground/90 mb-8 max-w-xl mx-auto">
-            Built for everyday luxury, bulk orders, and merch drops.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Button
-              size="lg"
-              onClick={() => router.push("/shop")}
-              className="bg-foreground text-background hover:bg-foreground/90 px-8 rounded-none transition-transform hover:scale-105 active:scale-95 h-12 text-base font-medium"
-            >
-              Shop Collection
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              size="lg"
-              onClick={() => router.push("/ai-studio")}
-              variant="outline"
-              className="border-foreground text-foreground hover:bg-accent px-8 rounded-none transition-transform hover:scale-105 active:scale-95 h-12 text-base font-medium"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Try AI Studio
-            </Button>
-          </div>
-        </div>
-      </section>
-
-
-
       {/* Collection Section */}
+
       <section className="container mx-auto px-4 py-16" aria-labelledby="collection-heading">
         <div className="mb-8">
           <h2 id="collection-heading" className="text-2xl sm:text-3xl md:text-4xl font-serif mb-2 text-foreground">
