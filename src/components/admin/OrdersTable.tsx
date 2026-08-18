@@ -47,10 +47,13 @@ import { toast } from "sonner";
 import type { AdminOrder } from "@/lib/db/admin-orders";
 import { ShipmentPanel } from "@/components/admin/shipment-panel";
 import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
+import { InitiateRefundDialog } from "@/components/admin/InitiateRefundDialog";
 
 type OrdersTableProps = {
   orders: AdminOrder[];
   onRefresh?: () => void;
+  defaultView?: "active" | "cancelled" | "all";
+  hideViewTabs?: boolean;
 };
 
 type ViewMode = "active" | "cancelled" | "all";
@@ -113,8 +116,13 @@ function AdminOrderTotals({ order }: { order: AdminOrder }) {
   );
 }
 
-export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("active");
+export function OrdersTable({
+  orders,
+  onRefresh,
+  defaultView = "active",
+  hideViewTabs = false,
+}: OrdersTableProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPayment, setFilterPayment] = useState("All");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -233,61 +241,63 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
   return (
     <div>
       {/* Top Level Section Navigation / View Tabs */}
-      <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-neutral-200 pb-3">
-        <Button
-          variant={viewMode === "active" ? "default" : "outline"}
-          size="sm"
-          className="rounded-none gap-2 font-medium"
-          onClick={() => setViewMode("active")}
-        >
-          <CheckCircle2 className="h-4 w-4" />
-          Active Orders
-          <Badge
-            variant="secondary"
-            className={`rounded-none text-xs ml-1 ${
-              viewMode === "active" ? "bg-black/20 text-white" : "bg-neutral-100"
-            }`}
+      {!hideViewTabs && (
+        <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-neutral-200 pb-3">
+          <Button
+            variant={viewMode === "active" ? "default" : "outline"}
+            size="sm"
+            className="rounded-none gap-2 font-medium"
+            onClick={() => setViewMode("active")}
           >
-            {activeOrders.length}
-          </Badge>
-        </Button>
+            <CheckCircle2 className="h-4 w-4" />
+            Active Orders
+            <Badge
+              variant="secondary"
+              className={`rounded-none text-xs ml-1 ${
+                viewMode === "active" ? "bg-black/20 text-white" : "bg-neutral-100"
+              }`}
+            >
+              {activeOrders.length}
+            </Badge>
+          </Button>
 
-        <Button
-          variant={viewMode === "cancelled" ? "default" : "outline"}
-          size="sm"
-          className="rounded-none gap-2 font-medium"
-          onClick={() => setViewMode("cancelled")}
-        >
-          <RotateCcw className="h-4 w-4" />
-          Cancelled Orders (Restocked)
-          <Badge
-            variant="secondary"
-            className={`rounded-none text-xs ml-1 ${
-              viewMode === "cancelled" ? "bg-black/20 text-white" : "bg-neutral-100"
-            }`}
+          <Button
+            variant={viewMode === "cancelled" ? "default" : "outline"}
+            size="sm"
+            className="rounded-none gap-2 font-medium"
+            onClick={() => setViewMode("cancelled")}
           >
-            {cancelledOrders.length}
-          </Badge>
-        </Button>
+            <RotateCcw className="h-4 w-4" />
+            Cancelled Orders (Restocked)
+            <Badge
+              variant="secondary"
+              className={`rounded-none text-xs ml-1 ${
+                viewMode === "cancelled" ? "bg-black/20 text-white" : "bg-neutral-100"
+              }`}
+            >
+              {cancelledOrders.length}
+            </Badge>
+          </Button>
 
-        <Button
-          variant={viewMode === "all" ? "default" : "outline"}
-          size="sm"
-          className="rounded-none gap-2 font-medium"
-          onClick={() => setViewMode("all")}
-        >
-          <ListFilter className="h-4 w-4" />
-          All Orders Archive
-          <Badge
-            variant="secondary"
-            className={`rounded-none text-xs ml-1 ${
-              viewMode === "all" ? "bg-black/20 text-white" : "bg-neutral-100"
-            }`}
+          <Button
+            variant={viewMode === "all" ? "default" : "outline"}
+            size="sm"
+            className="rounded-none gap-2 font-medium"
+            onClick={() => setViewMode("all")}
           >
-            {orders.length}
-          </Badge>
-        </Button>
-      </div>
+            <ListFilter className="h-4 w-4" />
+            All Orders Archive
+            <Badge
+              variant="secondary"
+              className={`rounded-none text-xs ml-1 ${
+                viewMode === "all" ? "bg-black/20 text-white" : "bg-neutral-100"
+              }`}
+            >
+              {orders.length}
+            </Badge>
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="border-neutral-200 rounded-none">
@@ -533,10 +543,9 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
                               </AlertDialogContent>
                             </AlertDialog>
                           ) : (
-                            <span className="text-xs text-red-600 font-mono flex items-center justify-end gap-1">
-                              <RotateCcw className="h-3 w-3" />
-                              Restocked
-                            </span>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <InitiateRefundDialog order={order} onSuccess={onRefresh} />
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
@@ -545,14 +554,29 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
                           <TableCell colSpan={9} className="p-0">
                             <div className="p-4 md:p-6 space-y-5">
                               {isCancelled && (
-                                <div className="p-3 bg-red-100/70 border border-red-200 text-red-900 text-sm flex items-start gap-2">
-                                  <RotateCcw className="h-4 w-4 mt-0.5 shrink-0 text-red-700" />
-                                  <div>
-                                    <p className="font-semibold">Order Cancelled &amp; Inventory Restocked</p>
-                                    <p className="text-xs text-red-800">
-                                      This order was cancelled. All {order.items.length} line items ({itemCount} units) have been added back to available inventory counts.
-                                    </p>
+                                <div className="p-4 bg-red-100/70 border border-red-200 text-red-900 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                  <div className="flex items-start gap-2">
+                                    <RotateCcw className="h-4 w-4 mt-0.5 shrink-0 text-red-700" />
+                                    <div>
+                                      <p className="font-semibold">Order Cancelled &amp; Inventory Restocked</p>
+                                      <p className="text-xs text-red-800">
+                                        All {order.items.length} line items ({itemCount} units) were returned to stock. You can process an automated customer refund via Razorpay below.
+                                      </p>
+                                    </div>
                                   </div>
+                                  <InitiateRefundDialog
+                                    order={order}
+                                    onSuccess={onRefresh}
+                                    triggerButton={
+                                      <Button
+                                        size="sm"
+                                        className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
+                                      >
+                                        <RotateCcw className="h-3.5 w-3.5" />
+                                        Initiate Razorpay Refund
+                                      </Button>
+                                    }
+                                  />
                                 </div>
                               )}
 
@@ -658,7 +682,7 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
       )}
 
       <div className="mt-6 text-sm text-neutral-600">
-        Showing {filteredOrders.length} of {orders.length} orders
+        Showing {filteredOrders.length} of {currentDataset.length} orders
       </div>
     </div>
   );

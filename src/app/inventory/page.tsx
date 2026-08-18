@@ -6,13 +6,23 @@ import { AdminNav } from "@/components/admin/AdminNav";
 import { ProductManagement } from "@/components/admin/ProductManagement";
 import { CategoryManagement } from "@/components/admin/CategoryManagement";
 import { InventoryOverview } from "@/components/admin/InventoryOverview";
-import { Loader2, Package, BarChart3, FolderOpen, TrendingUp } from "lucide-react";
+import { OrdersTable } from "@/components/admin/OrdersTable";
+import {
+  Loader2,
+  Package,
+  BarChart3,
+  FolderOpen,
+  TrendingUp,
+  RotateCcw,
+} from "lucide-react";
 import type { AdminCatalog } from "@/types/admin";
+import type { AdminOrder } from "@/lib/db/admin-orders";
 import { PRODUCT_CATEGORIES } from "@/data/categories";
 import { StockDetailsTab } from "@/app/inventory/stock-details-tab";
 
 export default function InventoryPage() {
   const [catalog, setCatalog] = useState<AdminCatalog | null>(null);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,19 +30,25 @@ export default function InventoryPage() {
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
 
-  const loadCatalog = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/catalog");
-      const data = (await response.json()) as AdminCatalog & { error?: string };
+      const [catalogRes, ordersRes] = await Promise.all([
+        fetch("/api/admin/catalog"),
+        fetch("/api/admin/orders"),
+      ]);
 
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to load inventory");
+      const catalogData = (await catalogRes.json()) as AdminCatalog & { error?: string };
+      const ordersData = (await ordersRes.json()) as { orders?: AdminOrder[]; error?: string };
+
+      if (!catalogRes.ok) {
+        throw new Error(catalogData.error ?? "Failed to load inventory");
       }
 
-      setCatalog(data);
+      setCatalog(catalogData);
+      setOrders(ordersData.orders ?? []);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load inventory";
       setError(message);
@@ -43,8 +59,8 @@ export default function InventoryPage() {
   }, []);
 
   useEffect(() => {
-    void loadCatalog();
-  }, [loadCatalog]);
+    void loadData();
+  }, [loadData]);
 
   const inventory = catalog?.inventory ?? [];
   const filteredInventory = inventory.filter((item) => {
@@ -66,6 +82,10 @@ export default function InventoryPage() {
   const categoryNames =
     catalog?.shopCategories.filter((name) => name !== "All Products") ?? [];
 
+  const cancelledOrdersCount = orders.filter(
+    (o) => o.status.toLowerCase() === "cancelled"
+  ).length;
+
   return (
     <div className="container mx-auto px-4 py-8 sm:py-10 max-w-7xl">
       <AdminNav />
@@ -73,7 +93,7 @@ export default function InventoryPage() {
       <div className="mb-6">
         <h1 className="text-3xl sm:text-4xl font-serif mb-1.5">Inventory Management</h1>
         <p className="text-sm sm:text-base text-neutral-600">
-          Manage products, categories, and track inventory
+          Manage products, categories, track inventory, and handle cancelled orders &amp; refunds
         </p>
       </div>
 
@@ -85,13 +105,13 @@ export default function InventoryPage() {
       ) : error ? (
         <div className="text-center py-24">
           <p className="text-neutral-600 mb-4">{error}</p>
-          <button type="button" onClick={() => void loadCatalog()} className="text-sm underline">
+          <button type="button" onClick={() => void loadData()} className="text-sm underline">
             Try again
           </button>
         </div>
       ) : catalog ? (
         <Tabs defaultValue="overview" className="w-full space-y-6">
-          <TabsList className="grid w-full h-auto grid-cols-2 sm:grid-cols-4 gap-1 p-1 mb-0 rounded-none bg-neutral-100 border border-neutral-200">
+          <TabsList className="grid w-full h-auto grid-cols-2 sm:grid-cols-5 gap-1 p-1 mb-0 rounded-none bg-neutral-100 border border-neutral-200">
             <TabsTrigger
               value="overview"
               className="rounded-none py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
@@ -120,6 +140,15 @@ export default function InventoryPage() {
               <TrendingUp className="h-4 w-4 mr-1.5 sm:mr-2" />
               <span className="text-xs sm:text-sm">Stock Details</span>
             </TabsTrigger>
+            <TabsTrigger
+              value="cancelled"
+              className="rounded-none py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm text-red-700 data-[state=active]:text-red-700"
+            >
+              <RotateCcw className="h-4 w-4 mr-1.5 sm:mr-2 text-red-600" />
+              <span className="text-xs sm:text-sm">
+                Cancelled ({cancelledOrdersCount})
+              </span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -133,14 +162,14 @@ export default function InventoryPage() {
             <ProductManagement
               products={catalog.products}
               categories={categoryNames}
-              onRefresh={loadCatalog}
+              onRefresh={loadData}
             />
           </TabsContent>
 
           <TabsContent value="categories">
             <CategoryManagement
               categories={catalog.categories}
-              onRefresh={loadCatalog}
+              onRefresh={loadData}
             />
           </TabsContent>
 
@@ -160,8 +189,30 @@ export default function InventoryPage() {
               categories={categories}
             />
           </TabsContent>
+
+          <TabsContent value="cancelled">
+            <div className="space-y-4">
+              <div className="bg-red-50/70 border border-red-200 p-4">
+                <h3 className="font-serif text-lg text-red-900 flex items-center gap-2">
+                  <RotateCcw className="h-5 w-5 text-red-600" />
+                  Cancelled Orders &amp; Restocked Inventory
+                </h3>
+                <p className="text-xs sm:text-sm text-red-700 mt-1">
+                  When an order is cancelled, all items are automatically restored to active inventory. Use the &quot;Initiate Refund&quot; button to process customer refunds directly via Razorpay API.
+                </p>
+              </div>
+
+              <OrdersTable
+                orders={orders}
+                onRefresh={loadData}
+                defaultView="cancelled"
+                hideViewTabs={false}
+              />
+            </div>
+          </TabsContent>
         </Tabs>
       ) : null}
     </div>
   );
 }
+
