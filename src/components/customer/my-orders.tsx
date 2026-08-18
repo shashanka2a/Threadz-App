@@ -16,6 +16,24 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
   ChevronDown,
   ChevronUp,
   Clock,
@@ -26,6 +44,8 @@ import {
   XCircle,
   AlertTriangle,
   RotateCcw,
+  Undo2,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { CustomerOrder } from "@/lib/db/customer-orders";
@@ -84,6 +104,12 @@ export function MyOrders() {
   const [trackingLoading, setTrackingLoading] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Return dialog state
+  const [returnDialogOpen, setReturnDialogOpen] = useState<string | null>(null);
+  const [returnReason, setReturnReason] = useState("Size does not fit");
+  const [returnComments, setReturnComments] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -156,6 +182,34 @@ export function MyOrders() {
     }
   };
 
+  const handleRequestReturn = async (orderId: string) => {
+    setSubmittingReturn(true);
+    try {
+      const res = await fetch(
+        `/api/customer/orders/${encodeURIComponent(orderId)}/return`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reason: `${returnReason}${returnComments ? ` - ${returnComments}` : ""}`,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to request return");
+      }
+      toast.success(data.message ?? "Return request submitted successfully");
+      setReturnDialogOpen(null);
+      setReturnComments("");
+      await loadOrders();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to request return");
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
   if (loading) {
     return <MyOrdersSkeleton />;
   }
@@ -183,7 +237,12 @@ export function MyOrders() {
         const track = cachedTracking ?? storedTracking;
 
         const isCancelled = order.status.toLowerCase() === "cancelled" || statusKey === "cancelled";
+        const isReturnRequested = order.status.toLowerCase() === "return_requested" || statusKey === "return_requested";
+        const isReturned = order.status.toLowerCase() === "returned" || statusKey === "returned";
+        const isDelivered = order.status.toLowerCase() === "delivered" || statusKey === "delivered";
+
         const eligibility = getOrderCancellationEligibility(order.createdAt, order.status);
+        const canRequestReturn = (isDelivered || !eligibility.eligible) && !isCancelled && !isReturnRequested && !isReturned;
 
         return (
           <Card
@@ -204,6 +263,16 @@ export function MyOrders() {
                       <Badge variant="outline" className="rounded-none text-xs border-red-200 text-red-700 bg-red-50 flex items-center gap-1">
                         <RotateCcw className="h-3 w-3" />
                         Items Restocked
+                      </Badge>
+                    ) : isReturnRequested ? (
+                      <Badge variant="outline" className="rounded-none text-xs border-purple-300 text-purple-800 bg-purple-50 flex items-center gap-1">
+                        <Truck className="h-3 w-3 text-purple-600" />
+                        Delhivery Pickup Pending
+                      </Badge>
+                    ) : isReturned ? (
+                      <Badge variant="outline" className="rounded-none text-xs border-blue-300 text-blue-800 bg-blue-50 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-blue-600" />
+                        Return Completed
                       </Badge>
                     ) : eligibility.eligible ? (
                       <Badge variant="outline" className="rounded-none text-xs border-amber-300 text-amber-800 bg-amber-50 flex items-center gap-1">
@@ -273,6 +342,114 @@ export function MyOrders() {
                     </AlertDialog>
                   )}
 
+                  {canRequestReturn && (
+                    <Dialog
+                      open={returnDialogOpen === order.id}
+                      onOpenChange={(isOpen) => setReturnDialogOpen(isOpen ? order.id : null)}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-none border-purple-300 text-purple-800 hover:bg-purple-50 text-xs sm:text-sm gap-1.5"
+                        >
+                          <Undo2 className="h-3.5 w-3.5 text-purple-600" />
+                          Request Return
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="rounded-none max-w-md">
+                        <DialogHeader>
+                          <div className="flex items-center gap-2 text-purple-800 font-serif text-xl">
+                            <Undo2 className="h-5 w-5 shrink-0 text-purple-600" />
+                            <DialogTitle className="font-serif">Request Order Return</DialogTitle>
+                          </div>
+                          <DialogDescription className="text-xs text-neutral-600 pt-1">
+                            We will schedule a Delhivery reverse pickup at your shipping address and process your refund upon collection.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4 py-3 text-sm">
+                          <div className="bg-neutral-50 p-3 border border-neutral-200 rounded-none text-xs space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500">Order ID:</span>
+                              <span className="font-mono font-medium">{order.id}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500">Items:</span>
+                              <span>{order.items.length} item(s)</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label htmlFor="return-reason" className="text-xs font-medium">
+                              Reason for Return <span className="text-red-500">*</span>
+                            </Label>
+                            <Select value={returnReason} onValueChange={setReturnReason}>
+                              <SelectTrigger id="return-reason" className="rounded-none text-xs">
+                                <SelectValue placeholder="Select Reason" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Size does not fit">Size issue (Too large / Too small)</SelectItem>
+                                <SelectItem value="Defective or damaged item">Defective or damaged item</SelectItem>
+                                <SelectItem value="Item different from description">Item different from description</SelectItem>
+                                <SelectItem value="Quality not as expected">Quality not as expected</SelectItem>
+                                <SelectItem value="Changed my mind">Changed mind</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label htmlFor="return-notes" className="text-xs font-medium">
+                              Additional Comments (Optional)
+                            </Label>
+                            <Input
+                              id="return-notes"
+                              placeholder="Describe any issues..."
+                              value={returnComments}
+                              onChange={(e) => setReturnComments(e.target.value)}
+                              className="rounded-none text-xs"
+                            />
+                          </div>
+
+                          <div className="p-2.5 bg-purple-50 border border-purple-200 text-purple-900 text-xs flex items-start gap-2">
+                            <Truck className="h-4 w-4 shrink-0 text-purple-600 mt-0.5" />
+                            <span>
+                              Our courier partner Delhivery will pick up the package from {order.addressLine1}, {order.city}.
+                            </span>
+                          </div>
+                        </div>
+
+                        <DialogFooter className="gap-2 sm:gap-0">
+                          <Button
+                            variant="outline"
+                            className="rounded-none"
+                            onClick={() => setReturnDialogOpen(null)}
+                            disabled={submittingReturn}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            className="rounded-none bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
+                            onClick={() => handleRequestReturn(order.id)}
+                            disabled={submittingReturn}
+                          >
+                            {submittingReturn ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              <>
+                                <Undo2 className="h-4 w-4" />
+                                Submit Return Request
+                              </>
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -300,6 +477,26 @@ export function MyOrders() {
                       <div>
                         <p className="font-semibold">Order Cancelled</p>
                         <p className="text-red-700">This order has been cancelled and all items have been restored to available inventory.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {isReturnRequested && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 text-purple-900 text-xs sm:text-sm flex items-start gap-2">
+                      <Truck className="h-4 w-4 mt-0.5 shrink-0 text-purple-600" />
+                      <div>
+                        <p className="font-semibold">Return Requested &amp; Pickup in Progress</p>
+                        <p className="text-purple-700">We have registered your return request. A Delhivery courier partner will arrive to collect the package.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {isReturned && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 text-xs sm:text-sm flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+                      <div>
+                        <p className="font-semibold">Return Completed &amp; Restocked</p>
+                        <p className="text-blue-700">The returned package has been received and verified. All items are restocked.</p>
                       </div>
                     </div>
                   )}
@@ -365,7 +562,7 @@ export function MyOrders() {
                                 </>
                               )}
                             </Button>
-                            {!shipment.cancelledAt && !isCancelled && (
+                            {!shipment.cancelledAt && !isCancelled && !isReturnRequested && !isReturned && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -415,4 +612,3 @@ export function MyOrders() {
     </div>
   );
 }
-

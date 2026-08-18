@@ -86,6 +86,12 @@ export default function InventoryPage() {
     (o) => o.status.toLowerCase() === "cancelled"
   ).length;
 
+  const returnOrdersCount = orders.filter(
+    (o) =>
+      o.status.toLowerCase() === "return_requested" ||
+      o.status.toLowerCase() === "returned"
+  ).length;
+
   return (
     <div className="container mx-auto px-4 py-8 sm:py-10 max-w-7xl">
       <AdminNav />
@@ -93,7 +99,7 @@ export default function InventoryPage() {
       <div className="mb-6">
         <h1 className="text-3xl sm:text-4xl font-serif mb-1.5">Inventory Management</h1>
         <p className="text-sm sm:text-base text-neutral-600">
-          Manage products, categories, track inventory, and handle cancelled orders &amp; refunds
+          Manage products, categories, track inventory, schedule return pickups, and process refunds
         </p>
       </div>
 
@@ -146,7 +152,7 @@ export default function InventoryPage() {
             >
               <RotateCcw className="h-4 w-4 mr-1.5 sm:mr-2 text-red-600" />
               <span className="text-xs sm:text-sm">
-                Cancelled ({cancelledOrdersCount})
+                Returns &amp; Cancelled ({cancelledOrdersCount + returnOrdersCount})
               </span>
             </TabsTrigger>
           </TabsList>

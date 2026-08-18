@@ -42,21 +42,23 @@ import {
   Loader2,
   CheckCircle2,
   ListFilter,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminOrder } from "@/lib/db/admin-orders";
 import { ShipmentPanel } from "@/components/admin/shipment-panel";
 import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 import { InitiateRefundDialog } from "@/components/admin/InitiateRefundDialog";
+import { InitiatePickupDialog } from "@/components/admin/InitiatePickupDialog";
 
 type OrdersTableProps = {
   orders: AdminOrder[];
   onRefresh?: () => void;
-  defaultView?: "active" | "cancelled" | "all";
+  defaultView?: "active" | "cancelled" | "returns" | "all";
   hideViewTabs?: boolean;
 };
 
-type ViewMode = "active" | "cancelled" | "all";
+type ViewMode = "active" | "cancelled" | "returns" | "all";
 
 function formatAddress(order: AdminOrder) {
   const parts = [
@@ -127,13 +129,31 @@ export function OrdersTable({
   const [filterPayment, setFilterPayment] = useState("All");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [completingReturnId, setCompletingReturnId] = useState<string | null>(null);
 
   const activeOrders = useMemo(
-    () => orders.filter((order) => order.status.toLowerCase() !== "cancelled"),
+    () =>
+      orders.filter(
+        (order) =>
+          order.status.toLowerCase() !== "cancelled" &&
+          order.status.toLowerCase() !== "return_requested" &&
+          order.status.toLowerCase() !== "returned"
+      ),
     [orders]
   );
+
   const cancelledOrders = useMemo(
     () => orders.filter((order) => order.status.toLowerCase() === "cancelled"),
+    [orders]
+  );
+
+  const returnOrders = useMemo(
+    () =>
+      orders.filter(
+        (order) =>
+          order.status.toLowerCase() === "return_requested" ||
+          order.status.toLowerCase() === "returned"
+      ),
     [orders]
   );
 
@@ -143,11 +163,13 @@ export function OrdersTable({
         return activeOrders;
       case "cancelled":
         return cancelledOrders;
+      case "returns":
+        return returnOrders;
       case "all":
       default:
         return orders;
     }
-  }, [viewMode, activeOrders, cancelledOrders, orders]);
+  }, [viewMode, activeOrders, cancelledOrders, returnOrders, orders]);
 
   const paymentMethods = useMemo(() => {
     const methods = new Set(orders.map((order) => order.paymentMethod.toUpperCase()));
@@ -190,6 +212,26 @@ export function OrdersTable({
       toast.error(err instanceof Error ? err.message : "Failed to cancel order");
     } finally {
       setCancellingOrderId(null);
+    }
+  };
+
+  const handleCompleteReturn = async (orderId: string) => {
+    setCompletingReturnId(orderId);
+    try {
+      const res = await fetch(
+        `/api/admin/orders/${encodeURIComponent(orderId)}/return/complete`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to complete return");
+      }
+      toast.success(data.message ?? `Return completed and inventory restocked.`);
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to complete return");
+    } finally {
+      setCompletingReturnId(null);
     }
   };
 
@@ -267,7 +309,7 @@ export function OrdersTable({
             className="rounded-none gap-2 font-medium"
             onClick={() => setViewMode("cancelled")}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4 text-red-600" />
             Cancelled Orders (Restocked)
             <Badge
               variant="secondary"
@@ -276,6 +318,24 @@ export function OrdersTable({
               }`}
             >
               {cancelledOrders.length}
+            </Badge>
+          </Button>
+
+          <Button
+            variant={viewMode === "returns" ? "default" : "outline"}
+            size="sm"
+            className="rounded-none gap-2 font-medium text-purple-800"
+            onClick={() => setViewMode("returns")}
+          >
+            <Undo2 className="h-4 w-4 text-purple-600" />
+            Returns &amp; Pickups
+            <Badge
+              variant="secondary"
+              className={`rounded-none text-xs ml-1 ${
+                viewMode === "returns" ? "bg-black/20 text-white" : "bg-purple-100 text-purple-900"
+              }`}
+            >
+              {returnOrders.length}
             </Badge>
           </Button>
 
@@ -305,24 +365,26 @@ export function OrdersTable({
             <p className="text-sm text-neutral-600 mb-1">
               {viewMode === "cancelled"
                 ? "Cancelled Orders"
+                : viewMode === "returns"
+                ? "Return Requests"
                 : viewMode === "active"
                 ? "Active Orders"
                 : "Filtered Orders"}
             </p>
             <p className="text-2xl font-semibold">{filteredOrders.length}</p>
             <p className="text-xs text-neutral-500 mt-1">
-              {totalUnits} units total {viewMode === "cancelled" ? "restocked" : "allocated"}
+              {totalUnits} units total {viewMode === "cancelled" || viewMode === "returns" ? "restocked / return" : "allocated"}
             </p>
           </CardContent>
         </Card>
         <Card className="border-neutral-200 rounded-none">
           <CardContent className="p-6">
             <p className="text-sm text-neutral-600 mb-1">
-              {viewMode === "cancelled" ? "Restocked Order Value" : "Gross Order Value"}
+              {viewMode === "cancelled" || viewMode === "returns" ? "Restocked / Return Value" : "Gross Order Value"}
             </p>
             <p className="text-2xl font-semibold">₹{totalRevenue.toLocaleString()}</p>
             <p className="text-xs text-neutral-500 mt-1">
-              {viewMode === "cancelled"
+              {viewMode === "cancelled" || viewMode === "returns"
                 ? "Inventory released back to stock"
                 : "Active revenue from filtered set"}
             </p>
@@ -333,7 +395,7 @@ export function OrdersTable({
             <p className="text-sm text-neutral-600 mb-1">All Orders in Database</p>
             <p className="text-2xl font-semibold">{orders.length}</p>
             <p className="text-xs text-neutral-500 mt-1">
-              {activeOrders.length} active · {cancelledOrders.length} cancelled
+              {activeOrders.length} active · {cancelledOrders.length} cancelled · {returnOrders.length} returns
             </p>
           </CardContent>
         </Card>
@@ -394,9 +456,9 @@ export function OrdersTable({
                   <TableHead className="bg-amber-50 font-semibold text-neutral-900">
                     Payment
                   </TableHead>
-                  {viewMode === "cancelled" ? (
+                  {viewMode === "cancelled" || viewMode === "returns" ? (
                     <TableHead className="bg-amber-50 font-semibold text-neutral-900">
-                      Restocked Inventory Items
+                      Returned / Restocked Items
                     </TableHead>
                   ) : (
                     <TableHead className="bg-amber-50 text-center font-semibold text-neutral-900">
@@ -408,7 +470,7 @@ export function OrdersTable({
                   </TableHead>
                   <TableHead className="bg-amber-50 font-semibold text-neutral-900">Status</TableHead>
                   <TableHead className="bg-amber-50 font-semibold text-neutral-900 text-right">
-                    Action
+                    Actions
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -417,10 +479,13 @@ export function OrdersTable({
                   const isExpanded = expandedOrderId === order.id;
                   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
                   const isCancelled = order.status.toLowerCase() === "cancelled";
+                  const isReturn =
+                    order.status.toLowerCase() === "return_requested" ||
+                    order.status.toLowerCase() === "returned";
 
                   return (
                     <Fragment key={order.id}>
-                      <TableRow className={`hover:bg-neutral-50/80 align-top ${isCancelled ? "bg-red-50/20" : ""}`}>
+                      <TableRow className={`hover:bg-neutral-50/80 align-top ${isCancelled ? "bg-red-50/20" : isReturn ? "bg-purple-50/20" : ""}`}>
                         <TableCell className="align-top">
                           <Button
                             variant="ghost"
@@ -453,14 +518,18 @@ export function OrdersTable({
                           </Badge>
                         </TableCell>
 
-                        {viewMode === "cancelled" ? (
+                        {viewMode === "cancelled" || viewMode === "returns" ? (
                           <TableCell className="align-top">
                             <div className="flex flex-wrap gap-1 max-w-sm">
                               {order.items.map((item) => (
                                 <Badge
                                   key={item.id}
                                   variant="secondary"
-                                  className="rounded-none text-[11px] bg-red-50 text-red-800 border border-red-200"
+                                  className={`rounded-none text-[11px] border ${
+                                    isCancelled
+                                      ? "bg-red-50 text-red-800 border-red-200"
+                                      : "bg-purple-50 text-purple-800 border-purple-200"
+                                  }`}
                                 >
                                   {item.quantity}x {item.productName} ({item.size})
                                 </Badge>
@@ -483,70 +552,107 @@ export function OrdersTable({
                                 ? "bg-green-600"
                                 : order.status === "cancelled"
                                 ? "bg-red-600"
+                                : order.status === "return_requested"
+                                ? "bg-purple-600"
+                                : order.status === "returned"
+                                ? "bg-blue-700"
                                 : "bg-amber-500"
                             }`}
                           >
-                            {order.status === "cancelled" ? "Cancelled (Restocked)" : order.status}
+                            {order.status === "cancelled"
+                              ? "Cancelled"
+                              : order.status === "return_requested"
+                              ? "Return Requested"
+                              : order.status === "returned"
+                              ? "Returned"
+                              : order.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right align-top">
-                          {!isCancelled ? (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 rounded-none text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
-                                  disabled={cancellingOrderId === order.id}
-                                >
-                                  {cancellingOrderId === order.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <>
-                                      <XCircle className="h-3.5 w-3.5 mr-1" />
-                                      Cancel
-                                    </>
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-none max-w-md">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-serif text-xl">
-                                    <AlertTriangle className="h-5 w-5 shrink-0" />
-                                    Cancel Order #{order.id}?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription className="space-y-2 text-sm text-neutral-600 pt-2">
-                                    <p>
-                                      Canceling this order will change its status to <strong>cancelled</strong>, cancel any linked Delhivery shipment, and automatically restore all items back to the product stock.
-                                    </p>
-                                    <div className="bg-neutral-100 p-3 rounded-none text-xs text-neutral-800 font-mono">
-                                      <strong>Items to Restock:</strong>
-                                      <ul className="list-disc list-inside mt-1">
-                                        {order.items.map((it) => (
-                                          <li key={it.id}>
-                                            {it.quantity}x {it.productName} ({it.size})
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
-                                  <AlertDialogCancel className="rounded-none">Keep Active</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleAdminCancelOrder(order.id)}
-                                    className="rounded-none bg-red-600 text-white hover:bg-red-700"
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            {isReturn && (
+                              <>
+                                <InitiatePickupDialog order={order} onSuccess={onRefresh} />
+                                <InitiateRefundDialog order={order} onSuccess={onRefresh} />
+                                {order.status === "return_requested" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-none text-blue-700 border-blue-200 hover:bg-blue-50 text-xs gap-1"
+                                    disabled={completingReturnId === order.id}
+                                    onClick={() => handleCompleteReturn(order.id)}
                                   >
-                                    Cancel &amp; Restock Inventory
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          ) : (
-                            <div className="flex items-center justify-end gap-1.5">
+                                    {completingReturnId === order.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Restock
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </>
+                            )}
+
+                            {isCancelled && (
                               <InitiateRefundDialog order={order} onSuccess={onRefresh} />
-                            </div>
-                          )}
+                            )}
+
+                            {!isCancelled && !isReturn && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 rounded-none text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
+                                    disabled={cancellingOrderId === order.id}
+                                  >
+                                    {cancellingOrderId === order.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <XCircle className="h-3.5 w-3.5 mr-1" />
+                                        Cancel
+                                      </>
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="rounded-none max-w-md">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-serif text-xl">
+                                      <AlertTriangle className="h-5 w-5 shrink-0" />
+                                      Cancel Order #{order.id}?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="space-y-2 text-sm text-neutral-600 pt-2">
+                                      <p>
+                                        Canceling this order will change its status to <strong>cancelled</strong>, cancel any linked Delhivery shipment, and automatically restore all items back to the product stock.
+                                      </p>
+                                      <div className="bg-neutral-100 p-3 rounded-none text-xs text-neutral-800 font-mono">
+                                        <strong>Items to Restock:</strong>
+                                        <ul className="list-disc list-inside mt-1">
+                                          {order.items.map((it) => (
+                                            <li key={it.id}>
+                                              {it.quantity}x {it.productName} ({it.size})
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
+                                    <AlertDialogCancel className="rounded-none">Keep Active</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleAdminCancelOrder(order.id)}
+                                      className="rounded-none bg-red-600 text-white hover:bg-red-700"
+                                    >
+                                      Cancel &amp; Restock Inventory
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                       {isExpanded && (
@@ -577,6 +683,46 @@ export function OrdersTable({
                                       </Button>
                                     }
                                   />
+                                </div>
+                              )}
+
+                              {isReturn && (
+                                <div className="p-4 bg-purple-100/70 border border-purple-200 text-purple-900 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                  <div className="flex items-start gap-2">
+                                    <Undo2 className="h-4 w-4 mt-0.5 shrink-0 text-purple-700" />
+                                    <div>
+                                      <p className="font-semibold">Customer Return Request</p>
+                                      <p className="text-xs text-purple-800">
+                                        Customer has requested a return. Use Delhivery to dispatch reverse pickup and Razorpay to issue refund upon collection.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <InitiatePickupDialog
+                                      order={order}
+                                      onSuccess={onRefresh}
+                                      triggerButton={
+                                        <Button
+                                          size="sm"
+                                          className="rounded-none bg-amber-600 text-white hover:bg-amber-700 text-xs shrink-0 gap-1.5"
+                                        >
+                                          Initiate Pickup (Delhivery)
+                                        </Button>
+                                      }
+                                    />
+                                    <InitiateRefundDialog
+                                      order={order}
+                                      onSuccess={onRefresh}
+                                      triggerButton={
+                                        <Button
+                                          size="sm"
+                                          className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
+                                        >
+                                          Initiate Refund (Razorpay)
+                                        </Button>
+                                      }
+                                    />
+                                  </div>
                                 </div>
                               )}
 

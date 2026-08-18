@@ -782,3 +782,102 @@ export async function registerWarehouse(
 ): Promise<WarehouseRegisterResult> {
   return createWarehouse(config);
 }
+
+export type DelhiveryPickupRequestInput = {
+  orderId: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  pickupDate?: string;
+  pickupTime?: string;
+  expectedPackageCount?: number;
+};
+
+export type DelhiveryPickupResult = {
+  success: boolean;
+  pickupId?: string;
+  waybill?: string;
+  status?: string;
+  message?: string;
+  error?: string;
+  raw?: unknown;
+};
+
+/**
+ * Schedule reverse pickup for a customer return via Delhivery Pickup Request API.
+ */
+export async function requestDelhiveryPickup(
+  input: DelhiveryPickupRequestInput
+): Promise<DelhiveryPickupResult> {
+  const pickupLocation =
+    process.env.DELHIVERY_PICKUP_LOCATION?.trim() || "kandukya";
+
+  if (isMockMode()) {
+    const mockPickupId = `PU-MOCK-${Date.now().toString().slice(-8)}`;
+    const mockWaybill = `REV-WB-${Date.now().toString().slice(-8)}`;
+    return {
+      success: true,
+      pickupId: mockPickupId,
+      waybill: mockWaybill,
+      status: "Scheduled",
+      message: `Delhivery pickup scheduled successfully (Pickup ID: ${mockPickupId}). Delivery partner will pick up from ${input.customerName}, ${input.city}.`,
+      raw: { mock: true, pickupId: mockPickupId },
+    };
+  }
+
+  const dateStr =
+    input.pickupDate ||
+    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const timeStr = input.pickupTime || "12:00:00";
+
+  const payload = {
+    pickup_time: timeStr,
+    pickup_date: dateStr,
+    pickup_location: pickupLocation,
+    expected_package_count: input.expectedPackageCount ?? 1,
+  };
+
+  try {
+    const res = await delhiveryFetch("/fm/request/new/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await parseDelhiveryJson<{
+      pr_id?: number | string;
+      pickup_id?: string;
+      incoming_cnt?: number;
+      message?: string;
+      error?: string;
+      status?: string;
+    }>(res);
+
+    const pickupId = data.pickup_id ?? (data.pr_id ? String(data.pr_id) : undefined);
+
+    if (!res.ok || data.error || !pickupId) {
+      return {
+        success: false,
+        error: data.error ?? data.message ?? `Delhivery pickup request failed (${res.status})`,
+        raw: data,
+      };
+    }
+
+    return {
+      success: true,
+      pickupId,
+      status: "Scheduled",
+      message: `Delhivery pickup request created successfully (Pickup ID: ${pickupId}) for ${dateStr} at ${timeStr}.`,
+      raw: data,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to connect to Delhivery Pickup API",
+    };
+  }
+}
+

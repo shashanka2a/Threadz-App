@@ -8,6 +8,8 @@ export type CustomerOrderStatusKey =
   | "ready_to_ship"
   | "confirmed"
   | "pending"
+  | "return_requested"
+  | "returned"
   | "rto"
   | "unknown";
 
@@ -19,6 +21,8 @@ function classifyShipmentStatus(status: string): CustomerOrderStatusKey | null {
   const normalized = normalizeStatus(status);
 
   if (normalized.includes("cancel")) return "cancelled";
+  if (normalized.includes("pickup scheduled") || normalized.includes("return request")) return "return_requested";
+  if (normalized.includes("returned")) return "returned";
   if (normalized.includes("rto") || normalized.includes("return")) return "rto";
   if (normalized.includes("deliver")) return "delivered";
   if (
@@ -73,6 +77,14 @@ export function resolveCustomerOrderStatusKey(
     return "cancelled";
   }
 
+  if (order.status.toLowerCase() === "return_requested") {
+    return "return_requested";
+  }
+
+  if (order.status.toLowerCase() === "returned") {
+    return "returned";
+  }
+
   const candidates = [
     liveTracking?.status,
     order.shipment?.trackingStatus,
@@ -90,6 +102,8 @@ export function resolveCustomerOrderStatusKey(
   if (orderStatus === "confirmed") return "confirmed";
   if (orderStatus === "pending") return "pending";
   if (orderStatus === "cancelled") return "cancelled";
+  if (orderStatus === "return_requested") return "return_requested";
+  if (orderStatus === "returned") return "returned";
 
   return order.shipment ? "ready_to_ship" : "confirmed";
 }
@@ -102,6 +116,8 @@ export function formatCustomerOrderStatusLabel(key: CustomerOrderStatusKey): str
     ready_to_ship: "Ready to ship",
     confirmed: "Order confirmed",
     pending: "Processing",
+    return_requested: "Return Requested",
+    returned: "Returned & Restocked",
     rto: "Returned to sender",
     unknown: "Processing",
   };
@@ -115,6 +131,10 @@ export function customerOrderStatusColor(key: CustomerOrderStatusKey): string {
     case "cancelled":
     case "rto":
       return "bg-red-600";
+    case "return_requested":
+      return "bg-purple-600";
+    case "returned":
+      return "bg-blue-700";
     case "in_transit":
       return "bg-blue-600";
     case "ready_to_ship":
