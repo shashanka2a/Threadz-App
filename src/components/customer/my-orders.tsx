@@ -5,13 +5,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   ChevronDown,
   ChevronUp,
+  Clock,
   Loader2,
   Package,
   RefreshCw,
   Truck,
   XCircle,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { CustomerOrder } from "@/lib/db/customer-orders";
@@ -22,6 +36,7 @@ import {
   getTrackingFromShipment,
   resolveCustomerOrderStatusKey,
 } from "@/lib/customer-order-status";
+import { getOrderCancellationEligibility } from "@/lib/order-eligibility";
 import type { TrackingResult } from "@/types/shipment";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -30,6 +45,8 @@ function formatDate(iso: string) {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -60,12 +77,12 @@ function MyOrdersSkeleton() {
 }
 
 export function MyOrders() {
-
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tracking, setTracking] = useState<Record<string, TrackingResult>>({});
   const [trackingLoading, setTrackingLoading] = useState<string | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const loadOrders = useCallback(async () => {
@@ -119,11 +136,29 @@ export function MyOrders() {
     }
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    setCancellingOrderId(orderId);
+    try {
+      const res = await fetch(
+        `/api/customer/orders/${encodeURIComponent(orderId)}/cancel`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to cancel order");
+      }
+      toast.success(data.message ?? `Order #${orderId} was cancelled successfully`);
+      await loadOrders();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel order");
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
+
   if (loading) {
     return <MyOrdersSkeleton />;
   }
-
-
 
   if (orders.length === 0) {
     return (
@@ -147,57 +182,145 @@ export function MyOrders() {
         const statusLabel = formatCustomerOrderStatusLabel(statusKey);
         const track = cachedTracking ?? storedTracking;
 
+        const isCancelled = order.status.toLowerCase() === "cancelled" || statusKey === "cancelled";
+        const eligibility = getOrderCancellationEligibility(order.createdAt, order.status);
+
         return (
-          <Card key={order.id} className="border-neutral-200 rounded-none">
+          <Card
+            key={order.id}
+            className={`rounded-none transition-all ${
+              isCancelled ? "border-neutral-200 bg-neutral-50/50 opacity-90" : "border-neutral-200 bg-card"
+            }`}
+          >
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-medium text-sm sm:text-base">{order.id}</span>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono font-medium text-sm sm:text-base">{order.id}</span>
                     <Badge className={`rounded-none ${customerOrderStatusColor(statusKey)}`}>
                       {statusLabel}
                     </Badge>
+                    {isCancelled ? (
+                      <Badge variant="outline" className="rounded-none text-xs border-red-200 text-red-700 bg-red-50 flex items-center gap-1">
+                        <RotateCcw className="h-3 w-3" />
+                        Items Restocked
+                      </Badge>
+                    ) : eligibility.eligible ? (
+                      <Badge variant="outline" className="rounded-none text-xs border-amber-300 text-amber-800 bg-amber-50 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Cancel available ({eligibility.hoursRemaining}h {eligibility.minutesRemaining}m left)
+                      </Badge>
+                    ) : (
+                      <span className="text-[11px] text-neutral-400">
+                        24h cancellation window passed
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-neutral-600">{formatDate(order.createdAt)}</p>
-                  <p className="text-sm mt-1">
+                  <p className="text-xs sm:text-sm text-neutral-500">{formatDate(order.createdAt)}</p>
+                  <p className="text-sm font-medium pt-0.5">
                     {order.items.length} item(s) · ₹{order.total.toLocaleString()}
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-none w-full sm:w-auto"
-                  onClick={() => setExpandedId(expanded ? null : order.id)}
-                >
-                  {expanded ? (
-                    <>
-                      <ChevronUp className="h-4 w-4 mr-1" /> Hide
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-1" /> Details
-                    </>
+
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  {eligibility.eligible && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-none border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800 text-xs sm:text-sm"
+                          disabled={cancellingOrderId === order.id}
+                        >
+                          {cancellingOrderId === order.id ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                              Cancelling...
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                              Cancel Order
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-none max-w-md">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-serif text-xl">
+                            <AlertTriangle className="h-5 w-5 shrink-0" />
+                            Cancel Order #{order.id}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="space-y-2 text-sm text-neutral-600 pt-2">
+                            <p>
+                              Are you sure you want to cancel this order? This action cannot be undone.
+                            </p>
+                            <p className="bg-neutral-100 p-3 rounded-none text-xs text-neutral-700 font-mono">
+                              <strong>Refund &amp; Stock Policy:</strong> All reserved items will be returned to inventory immediately. If prepaid, your payment will be refunded according to bank processing cycles.
+                            </p>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
+                          <AlertDialogCancel className="rounded-none">Keep Order</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="rounded-none bg-red-600 text-white hover:bg-red-700"
+                          >
+                            Confirm Cancellation
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
-                </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-none w-full sm:w-auto"
+                    onClick={() => setExpandedId(expanded ? null : order.id)}
+                  >
+                    {expanded ? (
+                      <>
+                        <ChevronUp className="h-4 w-4 mr-1" /> Hide Details
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4 mr-1" /> View Details
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {expanded && (
                 <div className="mt-4 pt-4 border-t border-neutral-200 space-y-4">
+                  {isCancelled && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2">
+                      <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600" />
+                      <div>
+                        <p className="font-semibold">Order Cancelled</p>
+                        <p className="text-red-700">This order has been cancelled and all items have been restored to available inventory.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
-                    <p className="text-sm font-medium mb-2">Items</p>
+                    <p className="text-sm font-medium mb-2">Order Items</p>
                     <ul className="text-sm space-y-1 text-neutral-700">
                       {order.items.map((item) => (
-                        <li key={item.id}>
-                          {item.productName} · {item.color} · {item.size} × {item.quantity}{" "}
-                          — ₹{item.lineTotal}
+                        <li key={item.id} className="flex justify-between items-center py-1 border-b border-neutral-100 last:border-0">
+                          <span>
+                            {item.productName} · <span className="font-medium">{item.color}</span> · <span className="font-mono">{item.size}</span> × {item.quantity}
+                          </span>
+                          <span className="font-medium tabular-nums">₹{item.lineTotal.toLocaleString()}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   <div className="text-sm">
-                    <p className="font-medium mb-1">Ship to</p>
-                    <p className="text-neutral-600">
+                    <p className="font-medium mb-1">Shipping Address</p>
+                    <p className="text-neutral-600 leading-relaxed">
                       {order.fullName}, {order.addressLine1}
                       {order.addressLine2 ? `, ${order.addressLine2}` : ""},{" "}
                       {order.city}, {order.state} {order.postalCode}
@@ -208,23 +331,23 @@ export function MyOrders() {
                     <div className="border border-neutral-200 p-4 space-y-3 bg-neutral-50">
                       <div className="flex items-center gap-2">
                         <Truck className="h-4 w-4" />
-                        <span className="font-medium text-sm">Shipment</span>
+                        <span className="font-medium text-sm">Delivery &amp; Shipment</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                         <p>
                           <span className="text-neutral-500">AWB / Waybill:</span>{" "}
-                          {shipment.waybill ?? "—"}
+                          <span className="font-mono">{shipment.waybill ?? "—"}</span>
                         </p>
                         <p>
                           <span className="text-neutral-500">Status:</span>{" "}
                           {formatCustomerShipmentStatus(order, liveTracking)}
                         </p>
                         {shipment.cancelledAt && (
-                          <p className="text-red-600">Cancelled</p>
+                          <p className="text-red-600 font-medium">Shipment Cancelled</p>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 pt-1">
                         {waybill && (
                           <>
                             <Button
@@ -238,19 +361,19 @@ export function MyOrders() {
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
                                 <>
-                                  <RefreshCw className="h-4 w-4 mr-1" /> Track
+                                  <RefreshCw className="h-4 w-4 mr-1" /> Track Live
                                 </>
                               )}
                             </Button>
-                            {!shipment.cancelledAt && (
+                            {!shipment.cancelledAt && !isCancelled && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="rounded-none text-red-700 border-red-200"
+                                className="rounded-none text-red-700 border-red-200 hover:bg-red-50"
                                 disabled={actionLoading === waybill}
                                 onClick={() => cancelShipment(waybill)}
                               >
-                                <XCircle className="h-4 w-4 mr-1" /> Cancel
+                                <XCircle className="h-4 w-4 mr-1" /> Cancel Shipment
                               </Button>
                             )}
                           </>
@@ -258,17 +381,17 @@ export function MyOrders() {
                       </div>
 
                       {track && track.scans.length > 0 && (
-                        <div className="text-sm">
-                          <p className="font-medium mb-2">Tracking updates</p>
+                        <div className="text-sm pt-2">
+                          <p className="font-medium mb-2">Tracking History</p>
                           <ul className="space-y-2 border-l-2 border-neutral-300 pl-3">
                             {track.scans.map((scan, i) => (
                               <li key={i}>
-                                <p>{scan.status}</p>
+                                <p className="font-medium text-xs sm:text-sm">{scan.status}</p>
                                 {scan.location && (
                                   <p className="text-xs text-neutral-500">{scan.location}</p>
                                 )}
                                 {scan.timestamp && (
-                                  <p className="text-xs text-neutral-400">{scan.timestamp}</p>
+                                  <p className="text-xs text-neutral-400 tabular-nums">{scan.timestamp}</p>
                                 )}
                               </li>
                             ))}
@@ -277,9 +400,11 @@ export function MyOrders() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-neutral-600">
-                      Shipment not created yet — we will notify you when it ships.
-                    </p>
+                    !isCancelled && (
+                      <p className="text-sm text-neutral-600">
+                        Shipment not created yet — we will notify you when it ships.
+                      </p>
+                    )
                   )}
                 </div>
               )}
@@ -290,3 +415,4 @@ export function MyOrders() {
     </div>
   );
 }
+
