@@ -242,7 +242,12 @@ export function MyOrders() {
         const isDelivered = order.status.toLowerCase() === "delivered" || statusKey === "delivered";
 
         const eligibility = getOrderCancellationEligibility(order.createdAt, order.status);
-        const canRequestReturn = (isDelivered || !eligibility.eligible) && !isCancelled && !isReturnRequested && !isReturned;
+
+        // Cancel is strictly available ONLY within 24 hours and BEFORE delivery
+        const canCancel = eligibility.eligible && !isCancelled && !isDelivered && !isReturnRequested && !isReturned;
+
+        // Return is strictly available ONLY AFTER order delivery
+        const canRequestReturn = isDelivered && !isCancelled && !isReturnRequested && !isReturned;
 
         return (
           <Card
@@ -274,7 +279,12 @@ export function MyOrders() {
                         <CheckCircle2 className="h-3 w-3 text-blue-600" />
                         Return Completed
                       </Badge>
-                    ) : eligibility.eligible ? (
+                    ) : isDelivered ? (
+                      <Badge variant="outline" className="rounded-none text-xs border-green-300 text-green-800 bg-green-50 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-green-600" />
+                        Delivered · Return Eligible
+                      </Badge>
+                    ) : canCancel ? (
                       <Badge variant="outline" className="rounded-none text-xs border-amber-300 text-amber-800 bg-amber-50 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         Cancel available ({eligibility.hoursRemaining}h {eligibility.minutesRemaining}m left)
@@ -292,7 +302,7 @@ export function MyOrders() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  {eligibility.eligible && (
+                  {canCancel && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

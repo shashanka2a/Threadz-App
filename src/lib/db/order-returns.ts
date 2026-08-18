@@ -41,6 +41,25 @@ export async function requestOrderReturn(
     if (!options.userEmail || order.email.toLowerCase() !== options.userEmail.toLowerCase()) {
       return { ok: false, error: "You are not authorized to return this order" };
     }
+
+    // Returns are only allowed after the order has been delivered
+    const { data: shipment } = await supabase
+      .from("shipments")
+      .select("delhivery_status, tracking_status")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    const isDelivered =
+      order.status.toLowerCase() === "delivered" ||
+      shipment?.delhivery_status?.toLowerCase().includes("deliver") ||
+      shipment?.tracking_status?.toLowerCase().includes("deliver");
+
+    if (!isDelivered) {
+      return {
+        ok: false,
+        error: "Return requests can only be placed after the order has been successfully delivered.",
+      };
+    }
   }
 
   const { error: updateError } = await supabase
