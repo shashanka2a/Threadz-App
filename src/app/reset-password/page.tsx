@@ -14,9 +14,10 @@ import { createClient } from "@/lib/supabase/client";
 
 function ResetPasswordForm() {
   const router = useRouter();
-  const { user, loading, updatePassword } = useAuth();
+  const { user, loading } = useAuth();
   const [sessionReady, setSessionReady] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const recoveryTokensRef = useRef<{ access_token: string; refresh_token: string } | null>(null);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -44,11 +45,15 @@ function ResetPasswordForm() {
       const type = hashParams.get("type");
 
       if (accessToken && refreshToken && (type === "recovery" || !type)) {
-        const { error } = await supabase.auth.setSession({
+        recoveryTokensRef.current = {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        };
+        const { error, data } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
-        if (!error) {
+        if (!error && data.session) {
           window.history.replaceState({}, "", "/reset-password");
           finishCheck(true);
           return;
@@ -62,11 +67,11 @@ function ResetPasswordForm() {
       const code = params.get("code");
 
       if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
+        const { error, data } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: (otpType as "recovery") || "recovery",
         });
-        if (!error) {
+        if (!error && data.session) {
           window.history.replaceState({}, "", "/reset-password");
           finishCheck(true);
           return;
@@ -74,8 +79,8 @@ function ResetPasswordForm() {
       }
 
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) {
+        const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error && data.session) {
           window.history.replaceState({}, "", "/reset-password");
           finishCheck(true);
           return;
@@ -138,9 +143,34 @@ function ResetPasswordForm() {
 
     setIsLoading(true);
 
-    const result = await updatePassword(password);
-    if (result.error) {
-      toast.error(result.error);
+    const supabase = createClient();
+    let {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session && recoveryTokensRef.current) {
+      const { data, error: setSessionError } = await supabase.auth.setSession(
+        recoveryTokensRef.current
+      );
+      if (!setSessionError && data.session) {
+        session = data.session;
+      }
+    }
+
+    if (!session) {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      if (!currentUser) {
+        toast.error("Your reset session has expired or is missing. Please request a new password reset link.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      toast.error(error.message);
       setIsLoading(false);
       return;
     }
