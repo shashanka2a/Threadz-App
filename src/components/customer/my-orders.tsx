@@ -344,57 +344,69 @@ export function MyOrders() {
                           )}
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="rounded-none max-w-md">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-serif text-xl">
-                            <AlertTriangle className="h-5 w-5 shrink-0" />
-                            Cancel Order #{order.id}?
-                          </AlertDialogTitle>
-                          <div className="space-y-3 text-sm text-neutral-600 pt-2">
-                            <p>
-                              Are you sure you want to cancel this order? This action cannot be undone.
-                            </p>
-
-                            {/* Order Details Breakdown */}
-                            <div className="bg-neutral-50 p-3 border border-neutral-200 rounded-none text-xs space-y-2 text-neutral-800">
-                              <p className="font-semibold text-neutral-900 border-b border-neutral-200 pb-1">
-                                Order Details ({order.items.length} item{order.items.length > 1 ? "s" : ""})
+                      <AlertDialogContent className="rounded-none max-w-md p-6">
+                        <AlertDialogHeader className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center shrink-0 border border-red-200">
+                              <AlertTriangle className="h-5 w-5 text-red-600" />
+                            </div>
+                            <div>
+                              <AlertDialogTitle className="text-xl font-serif text-neutral-900 tracking-tight">
+                                Cancel Order?
+                              </AlertDialogTitle>
+                              <p className="text-xs text-neutral-500 mt-0.5">
+                                This action cannot be undone once confirmed.
                               </p>
-                              <ul className="space-y-1.5">
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 pt-2 text-left">
+                            {/* Order Details Breakdown */}
+                            <div className="bg-neutral-50/80 border border-neutral-200/80 rounded-none p-3.5 space-y-2.5">
+                              <div className="flex items-center justify-between text-xs font-semibold text-neutral-900 pb-2 border-b border-neutral-200">
+                                <span>Order Items</span>
+                                <span className="text-neutral-500 font-normal">{order.items.length} item{order.items.length > 1 ? "s" : ""}</span>
+                              </div>
+                              <ul className="space-y-2 text-xs">
                                 {order.items.map((it) => (
-                                  <li key={it.id} className="flex justify-between items-center">
-                                    <span className="text-neutral-700">
-                                      {it.productName} · <span className="font-medium">{it.color}</span> · <span className="font-mono">{it.size}</span> × {it.quantity}
-                                    </span>
-                                    <span className="font-medium tabular-nums text-neutral-900">
+                                  <li key={it.id} className="flex justify-between items-start gap-3">
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-neutral-900 truncate">{it.productName}</p>
+                                      <p className="text-[11px] text-neutral-500">
+                                        {it.color} · Size: <span className="font-mono font-medium text-neutral-700">{it.size}</span> · Qty: {it.quantity}
+                                      </p>
+                                    </div>
+                                    <span className="font-medium tabular-nums text-neutral-900 shrink-0">
                                       ₹{it.lineTotal.toLocaleString()}
                                     </span>
                                   </li>
                                 ))}
                               </ul>
-                              <div className="flex justify-between items-center border-t border-neutral-200 pt-1.5 font-semibold text-neutral-900">
-                                <span>Order Total:</span>
-                                <span className="tabular-nums">₹{order.total.toLocaleString()}</span>
+                              <div className="flex justify-between items-center border-t border-neutral-200 pt-2 text-xs font-semibold text-neutral-900">
+                                <span>Total Paid:</span>
+                                <span className="text-sm font-bold tabular-nums text-neutral-950">₹{order.total.toLocaleString()}</span>
                               </div>
                             </div>
 
                             {/* Refund Info */}
-                            <div className="bg-amber-50/80 p-3 border border-amber-200 rounded-none text-xs text-amber-950 space-y-1">
-                              <p className="font-semibold flex items-center gap-1.5">
+                            <div className="bg-amber-50/80 border border-amber-200/80 p-3 text-xs space-y-1 text-amber-950">
+                              <p className="font-semibold flex items-center gap-1.5 text-amber-900">
                                 <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
                                 Payment Refund Timeline
                               </p>
-                              <p className="text-amber-900 leading-relaxed">
+                              <p className="text-amber-900/90 text-[11px] leading-relaxed">
                                 If paid online via UPI/Card, your full refund of <strong>₹{order.total.toLocaleString()}</strong> will be credited to your original payment source within <strong>3 business days</strong>.
                               </p>
                             </div>
                           </div>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
-                          <AlertDialogCancel className="rounded-none">Keep Order</AlertDialogCancel>
+                        <AlertDialogFooter className="gap-2 sm:gap-2 mt-4 pt-3 border-t border-neutral-100">
+                          <AlertDialogCancel className="rounded-none h-10 px-5 border-neutral-300 text-neutral-700 hover:bg-neutral-100 text-xs sm:text-sm font-medium">
+                            Keep My Order
+                          </AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleCancelOrder(order.id)}
-                            className="rounded-none bg-red-600 text-white hover:bg-red-700"
+                            className="rounded-none h-10 px-5 bg-red-600 text-white hover:bg-red-700 text-xs sm:text-sm font-medium transition-colors"
                           >
                             Confirm Cancellation
                           </AlertDialogAction>
