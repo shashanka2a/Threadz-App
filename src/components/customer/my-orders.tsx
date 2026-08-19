@@ -9,7 +9,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -43,7 +42,6 @@ import {
   Truck,
   XCircle,
   AlertTriangle,
-  RotateCcw,
   Undo2,
   CheckCircle2,
   Phone,
@@ -58,6 +56,7 @@ import {
   resolveCustomerOrderStatusKey,
 } from "@/lib/customer-order-status";
 import { getOrderCancellationEligibility } from "@/lib/order-eligibility";
+import { getOrderRefundInfo } from "@/lib/razorpay-refund";
 import type { TrackingResult } from "@/types/shipment";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -243,6 +242,8 @@ export function MyOrders() {
         const isDelivered = order.status.toLowerCase() === "delivered" || statusKey === "delivered";
 
         const eligibility = getOrderCancellationEligibility(order.createdAt, order.status);
+        const refundInfo = getOrderRefundInfo(order);
+        const isPrepaid = order.paymentMethod.toLowerCase() !== "cod";
 
         // Cancel is strictly available ONLY within 24 hours and BEFORE delivery
         const canCancel = eligibility.eligible && !isCancelled && !isDelivered && !isReturnRequested && !isReturned;
@@ -266,20 +267,38 @@ export function MyOrders() {
                       {statusLabel}
                     </Badge>
                     {isCancelled ? (
-                      <Badge variant="outline" className="rounded-none text-xs border-red-200 text-red-700 bg-red-50 flex items-center gap-1">
-                        <RotateCcw className="h-3 w-3" />
-                        Items Restocked
-                      </Badge>
+                      refundInfo ? (
+                        <Badge variant="outline" className="rounded-none text-xs border-emerald-300 text-emerald-800 bg-emerald-50 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          Refund Processed (₹{refundInfo.amount.toLocaleString()})
+                        </Badge>
+                      ) : isPrepaid ? (
+                        <Badge variant="outline" className="rounded-none text-xs border-amber-300 text-amber-800 bg-amber-50 flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-amber-600" />
+                          Refund in 3 business days
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="rounded-none text-xs border-neutral-200 text-neutral-600 bg-neutral-50">
+                          COD · No Payment Charged
+                        </Badge>
+                      )
                     ) : isReturnRequested ? (
                       <Badge variant="outline" className="rounded-none text-xs border-purple-300 text-purple-800 bg-purple-50 flex items-center gap-1">
                         <Truck className="h-3 w-3 text-purple-600" />
                         Delhivery Pickup Pending
                       </Badge>
                     ) : isReturned ? (
-                      <Badge variant="outline" className="rounded-none text-xs border-blue-300 text-blue-800 bg-blue-50 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-blue-600" />
-                        Return Completed
-                      </Badge>
+                      refundInfo ? (
+                        <Badge variant="outline" className="rounded-none text-xs border-emerald-300 text-emerald-800 bg-emerald-50 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          Refund Processed (₹{refundInfo.amount.toLocaleString()})
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="rounded-none text-xs border-blue-300 text-blue-800 bg-blue-50 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-blue-600" />
+                          Return Completed
+                        </Badge>
+                      )
                     ) : isDelivered ? (
                       <Badge variant="outline" className="rounded-none text-xs border-green-300 text-green-800 bg-green-50 flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3 text-green-600" />
@@ -331,14 +350,45 @@ export function MyOrders() {
                             <AlertTriangle className="h-5 w-5 shrink-0" />
                             Cancel Order #{order.id}?
                           </AlertDialogTitle>
-                          <AlertDialogDescription className="space-y-2 text-sm text-neutral-600 pt-2">
+                          <div className="space-y-3 text-sm text-neutral-600 pt-2">
                             <p>
                               Are you sure you want to cancel this order? This action cannot be undone.
                             </p>
-                            <p className="bg-neutral-100 p-3 rounded-none text-xs text-neutral-700 font-mono">
-                              <strong>Refund &amp; Stock Policy:</strong> All reserved items will be returned to inventory immediately. If prepaid, your payment will be refunded according to bank processing cycles.
-                            </p>
-                          </AlertDialogDescription>
+
+                            {/* Order Details Breakdown */}
+                            <div className="bg-neutral-50 p-3 border border-neutral-200 rounded-none text-xs space-y-2 text-neutral-800">
+                              <p className="font-semibold text-neutral-900 border-b border-neutral-200 pb-1">
+                                Order Details ({order.items.length} item{order.items.length > 1 ? "s" : ""})
+                              </p>
+                              <ul className="space-y-1.5">
+                                {order.items.map((it) => (
+                                  <li key={it.id} className="flex justify-between items-center">
+                                    <span className="text-neutral-700">
+                                      {it.productName} · <span className="font-medium">{it.color}</span> · <span className="font-mono">{it.size}</span> × {it.quantity}
+                                    </span>
+                                    <span className="font-medium tabular-nums text-neutral-900">
+                                      ₹{it.lineTotal.toLocaleString()}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <div className="flex justify-between items-center border-t border-neutral-200 pt-1.5 font-semibold text-neutral-900">
+                                <span>Order Total:</span>
+                                <span className="tabular-nums">₹{order.total.toLocaleString()}</span>
+                              </div>
+                            </div>
+
+                            {/* Refund Info */}
+                            <div className="bg-amber-50/80 p-3 border border-amber-200 rounded-none text-xs text-amber-950 space-y-1">
+                              <p className="font-semibold flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                                Payment Refund Timeline
+                              </p>
+                              <p className="text-amber-900 leading-relaxed">
+                                If paid online via UPI/Card, your full refund of <strong>₹{order.total.toLocaleString()}</strong> will be credited to your original payment source within <strong>3 business days</strong>.
+                              </p>
+                            </div>
+                          </div>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="gap-2 sm:gap-0 mt-3">
                           <AlertDialogCancel className="rounded-none">Keep Order</AlertDialogCancel>
@@ -483,12 +533,50 @@ export function MyOrders() {
               {expanded && (
                 <div className="mt-4 pt-4 border-t border-neutral-200 space-y-4">
                   {isCancelled && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2">
-                      <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600" />
-                      <div>
-                        <p className="font-semibold">Order Cancelled</p>
-                        <p className="text-red-700">This order has been cancelled and all items have been restored to available inventory.</p>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2">
+                        <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600" />
+                        <div>
+                          <p className="font-semibold">Order Cancelled</p>
+                          <p className="text-red-700">This order has been cancelled.</p>
+                        </div>
                       </div>
+
+                      {refundInfo ? (
+                        <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs sm:text-sm space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-semibold text-emerald-900">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            Payment Refund Processed Successfully
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs text-emerald-800">
+                            <div>
+                              <span className="text-emerald-600">Refund Amount:</span>{" "}
+                              <span className="font-semibold text-emerald-950 font-mono">₹{refundInfo.amount.toLocaleString()}</span>
+                            </div>
+                            <div>
+                              <span className="text-emerald-600">Refund ID:</span>{" "}
+                              <span className="font-mono font-medium text-emerald-950">{refundInfo.refundId}</span>
+                            </div>
+                            <div>
+                              <span className="text-emerald-600">Status:</span>{" "}
+                              <span className="uppercase font-semibold text-emerald-900">{refundInfo.status}</span>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-emerald-700 pt-0.5">
+                            Credited to your original payment method.
+                          </p>
+                        </div>
+                      ) : isPrepaid ? (
+                        <div className="p-3.5 bg-amber-50/80 border border-amber-200 text-amber-950 text-xs sm:text-sm space-y-1">
+                          <div className="flex items-center gap-1.5 font-semibold text-amber-900">
+                            <Clock className="h-4 w-4 text-amber-700" />
+                            Payment Refund in Progress
+                          </div>
+                          <p className="text-amber-800 text-xs leading-relaxed">
+                            Your refund of <strong>₹{order.total.toLocaleString()}</strong> has been initiated and will be credited to your original payment method within <strong>3 business days</strong>.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   )}
 
@@ -503,12 +591,50 @@ export function MyOrders() {
                   )}
 
                   {isReturned && (
-                    <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 text-xs sm:text-sm flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
-                      <div>
-                        <p className="font-semibold">Return Completed &amp; Restocked</p>
-                        <p className="text-blue-700">The returned package has been received and verified. All items are restocked.</p>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 text-xs sm:text-sm flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+                        <div>
+                          <p className="font-semibold">Return Completed</p>
+                          <p className="text-blue-700">The returned items have been received and inspected.</p>
+                        </div>
                       </div>
+
+                      {refundInfo ? (
+                        <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs sm:text-sm space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-semibold text-emerald-900">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            Return Refund Processed Successfully
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs text-emerald-800">
+                            <div>
+                              <span className="text-emerald-600">Refund Amount:</span>{" "}
+                              <span className="font-semibold text-emerald-950 font-mono">₹{refundInfo.amount.toLocaleString()}</span>
+                            </div>
+                            <div>
+                              <span className="text-emerald-600">Refund ID:</span>{" "}
+                              <span className="font-mono font-medium text-emerald-950">{refundInfo.refundId}</span>
+                            </div>
+                            <div>
+                              <span className="text-emerald-600">Status:</span>{" "}
+                              <span className="uppercase font-semibold text-emerald-900">{refundInfo.status}</span>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-emerald-700 pt-0.5">
+                            Credited to your original payment method.
+                          </p>
+                        </div>
+                      ) : isPrepaid ? (
+                        <div className="p-3.5 bg-amber-50/80 border border-amber-200 text-amber-950 text-xs sm:text-sm space-y-1">
+                          <div className="flex items-center gap-1.5 font-semibold text-amber-900">
+                            <Clock className="h-4 w-4 text-amber-700" />
+                            Return Refund in Progress
+                          </div>
+                          <p className="text-amber-800 text-xs leading-relaxed">
+                            Your refund of <strong>₹{order.total.toLocaleString()}</strong> will be credited to your original payment method within <strong>3 business days</strong>.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   )}
 

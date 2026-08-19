@@ -10,6 +10,15 @@ export type InitiateRefundInput = {
   reason?: string;
 };
 
+export type RefundInfo = {
+  refundId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  refundedAt: string;
+};
+
 export type InitiateRefundResult =
   | {
       ok: true;
@@ -24,6 +33,16 @@ export type InitiateRefundResult =
       ok: false;
       error: string;
     };
+
+export function getOrderRefundInfo(order: {
+  shipment?: { trackingData?: Record<string, unknown> | null } | null;
+}): RefundInfo | null {
+  const trackingData = order.shipment?.trackingData;
+  if (!trackingData || typeof trackingData !== "object") return null;
+  const refund = (trackingData as Record<string, unknown>).refund;
+  if (!refund || typeof refund !== "object") return null;
+  return refund as RefundInfo;
+}
 
 export async function processRazorpayRefund(
   input: InitiateRefundInput
@@ -103,6 +122,46 @@ export async function processRazorpayRefund(
     };
 
     const refund = await rzp.payments.refund(targetPaymentId, refundPayload);
+
+    const refundInfo: RefundInfo = {
+      refundId: refund.id,
+      paymentId: targetPaymentId,
+      amount: refundAmountRupees,
+      currency: refund.currency ?? "INR",
+      status: refund.status ?? "processed",
+      refundedAt: new Date().toISOString(),
+    };
+
+    // 4. Save refund record to shipments tracking_data for live UI reflection
+    const { data: existingShipment } = await supabase
+      .from("shipments")
+      .select("*")
+      .eq("order_id", order.id)
+      .maybeSingle();
+
+    if (existingShipment) {
+      const updatedTrackingData = {
+        ...(typeof existingShipment.tracking_data === "object" && existingShipment.tracking_data !== null
+          ? existingShipment.tracking_data
+          : {}),
+        refund: refundInfo,
+      };
+
+      await supabase
+        .from("shipments")
+        .update({
+          tracking_data: updatedTrackingData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingShipment.id);
+    } else {
+      await supabase.from("shipments").insert({
+        order_id: order.id,
+        delhivery_status: "Cancelled",
+        payment_mode: order.payment_method,
+        tracking_data: { refund: refundInfo },
+      });
+    }
 
     return {
       ok: true,

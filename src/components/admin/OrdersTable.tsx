@@ -50,6 +50,7 @@ import { ShipmentPanel } from "@/components/admin/shipment-panel";
 import { computeCheckoutTotals, formatInr } from "@/lib/pricing";
 import { InitiateRefundDialog } from "@/components/admin/InitiateRefundDialog";
 import { InitiatePickupDialog } from "@/components/admin/InitiatePickupDialog";
+import { getOrderRefundInfo } from "@/lib/razorpay-refund";
 
 type OrdersTableProps = {
   orders: AdminOrder[];
@@ -482,6 +483,7 @@ export function OrdersTable({
                   const isReturn =
                     order.status.toLowerCase() === "return_requested" ||
                     order.status.toLowerCase() === "returned";
+                  const refundInfo = getOrderRefundInfo(order);
 
                   return (
                     <Fragment key={order.id}>
@@ -546,27 +548,38 @@ export function OrdersTable({
                           ₹{order.total.toLocaleString()}
                         </TableCell>
                         <TableCell className="align-top">
-                          <Badge
-                            className={`rounded-none ${
-                              order.status === "confirmed"
-                                ? "bg-green-600"
-                                : order.status === "cancelled"
-                                ? "bg-red-600"
+                          <div className="space-y-1">
+                            <Badge
+                              className={`rounded-none ${
+                                order.status === "confirmed"
+                                  ? "bg-green-600"
+                                  : order.status === "cancelled"
+                                  ? "bg-red-600"
+                                  : order.status === "return_requested"
+                                  ? "bg-purple-600"
+                                  : order.status === "returned"
+                                  ? "bg-blue-700"
+                                  : "bg-amber-500"
+                              }`}
+                            >
+                              {order.status === "cancelled"
+                                ? "Cancelled"
                                 : order.status === "return_requested"
-                                ? "bg-purple-600"
+                                ? "Return Requested"
                                 : order.status === "returned"
-                                ? "bg-blue-700"
-                                : "bg-amber-500"
-                            }`}
-                          >
-                            {order.status === "cancelled"
-                              ? "Cancelled"
-                              : order.status === "return_requested"
-                              ? "Return Requested"
-                              : order.status === "returned"
-                              ? "Returned"
-                              : order.status}
-                          </Badge>
+                                ? "Returned"
+                                : order.status}
+                            </Badge>
+                            {refundInfo && (
+                              <Badge
+                                variant="outline"
+                                className="rounded-none text-[10px] bg-emerald-50 text-emerald-800 border-emerald-300 flex items-center gap-1 whitespace-nowrap"
+                              >
+                                <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                                Refunded (₹{refundInfo.amount})
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right align-top">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
@@ -670,19 +683,36 @@ export function OrdersTable({
                                       </p>
                                     </div>
                                   </div>
-                                  <InitiateRefundDialog
-                                    order={order}
-                                    onSuccess={onRefresh}
-                                    triggerButton={
-                                      <Button
-                                        size="sm"
-                                        className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
-                                      >
-                                        <RotateCcw className="h-3.5 w-3.5" />
-                                        Initiate Razorpay Refund
-                                      </Button>
-                                    }
-                                  />
+                                  {refundInfo ? (
+                                    <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                        <div>
+                                          <p className="font-semibold text-emerald-900">Razorpay Refund Completed (₹{refundInfo.amount.toLocaleString()})</p>
+                                          <p className="text-xs text-emerald-800">
+                                            Refund ID: <span className="font-mono font-medium">{refundInfo.refundId}</span> · Status: <span className="uppercase font-medium">{refundInfo.status}</span>
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Badge className="bg-emerald-600 text-white rounded-none self-start sm:self-auto text-[10px]">
+                                        Refund Processed
+                                      </Badge>
+                                    </div>
+                                  ) : (
+                                    <InitiateRefundDialog
+                                      order={order}
+                                      onSuccess={onRefresh}
+                                      triggerButton={
+                                        <Button
+                                          size="sm"
+                                          className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5" />
+                                          Initiate Razorpay Refund
+                                        </Button>
+                                      }
+                                    />
+                                  )}
                                 </div>
                               )}
 
@@ -710,18 +740,25 @@ export function OrdersTable({
                                         </Button>
                                       }
                                     />
-                                    <InitiateRefundDialog
-                                      order={order}
-                                      onSuccess={onRefresh}
-                                      triggerButton={
-                                        <Button
-                                          size="sm"
-                                          className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
-                                        >
-                                          Initiate Refund (Razorpay)
-                                        </Button>
-                                      }
-                                    />
+                                    {refundInfo ? (
+                                      <Badge className="bg-emerald-600 text-white rounded-none text-xs py-1.5 px-2.5 flex items-center gap-1">
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Refunded ₹{refundInfo.amount}
+                                      </Badge>
+                                    ) : (
+                                      <InitiateRefundDialog
+                                        order={order}
+                                        onSuccess={onRefresh}
+                                        triggerButton={
+                                          <Button
+                                            size="sm"
+                                            className="rounded-none bg-blue-600 text-white hover:bg-blue-700 text-xs shrink-0 gap-1.5"
+                                          >
+                                            Initiate Refund (Razorpay)
+                                          </Button>
+                                        }
+                                      />
+                                    )}
                                   </div>
                                 </div>
                               )}
