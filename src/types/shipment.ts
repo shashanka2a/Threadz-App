@@ -6,6 +6,8 @@ export type PincodeServiceability = {
   reversePickup: boolean;
   city?: string;
   state?: string;
+  estimatedDays?: string;
+  estimatedDeliveryDate?: string;
   message?: string;
 };
 

@@ -46,6 +46,7 @@ import {
   RotateCcw,
   Undo2,
   CheckCircle2,
+  Phone,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { CustomerOrder } from "@/lib/db/customer-orders";
@@ -532,6 +533,13 @@ export function MyOrders() {
                       {order.addressLine2 ? `, ${order.addressLine2}` : ""},{" "}
                       {order.city}, {order.state} {order.postalCode}
                     </p>
+                    {order.phone && (
+                      <p className="text-neutral-600 mt-1 flex items-center gap-1.5 text-xs sm:text-sm">
+                        <Phone className="h-3.5 w-3.5 text-neutral-500 shrink-0" />
+                        <span className="text-neutral-500">Phone:</span>
+                        <span className="font-mono font-medium text-neutral-900">{order.phone}</span>
+                      </p>
+                    )}
                   </div>
 
                   {shipment ? (

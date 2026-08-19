@@ -117,16 +117,67 @@ async function fetchDelhiveryWaybill(): Promise<string> {
   return waybill;
 }
 
+export function calculateEstimatedDelivery(pincode: string): {
+  daysRange: string;
+  estimatedDateString: string;
+} {
+  const clean = pincode.replace(/\D/g, "").slice(0, 6);
+  let minDays = 3;
+  let maxDays = 5;
+
+  if (/^50[0-4]/.test(clean)) {
+    // Hyderabad / Telangana Local
+    minDays = 1;
+    maxDays = 2;
+  } else if (/^(5[0-3]|56|57|58|59|60|61|62|63|64)/.test(clean)) {
+    // South India (AP, TS, KA, TN, KL)
+    minDays = 2;
+    maxDays = 3;
+  } else if (/^(40|41|42|43|11|12|20|30|38)/.test(clean)) {
+    // Major Metros (Mumbai, Pune, Delhi NCR, Ahmedabad, etc.)
+    minDays = 2;
+    maxDays = 4;
+  } else if (/^(79|19|18|74)/.test(clean)) {
+    // Remote / J&K / Northeast
+    minDays = 5;
+    maxDays = 7;
+  }
+
+  const targetDate = new Date();
+  let daysAdded = 0;
+  while (daysAdded < maxDays) {
+    targetDate.setDate(targetDate.getDate() + 1);
+    const day = targetDate.getDay();
+    if (day !== 0) {
+      daysAdded++;
+    }
+  }
+
+  const dateFormatted = targetDate.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+
+  return {
+    daysRange: `${minDays}–${maxDays} business days`,
+    estimatedDateString: `By ${dateFormatted}`,
+  };
+}
+
 function mockPincode(pin: string): PincodeServiceability {
   const serviceable = !/^9/.test(pin);
+  const est = calculateEstimatedDelivery(pin);
   return {
     pincode: pin,
     serviceable,
     prepaid: serviceable,
     cod: serviceable,
     reversePickup: serviceable,
-    city: serviceable ? "Sample City" : undefined,
-    state: serviceable ? "Sample State" : undefined,
+    city: serviceable ? "Hyderabad" : undefined,
+    state: serviceable ? "Telangana" : undefined,
+    estimatedDays: serviceable ? est.daysRange : undefined,
+    estimatedDeliveryDate: serviceable ? est.estimatedDateString : undefined,
     message: serviceable
       ? "Delivery available (mock mode — set DELHIVERY_API_TOKEN for live checks)"
       : "Pincode not serviceable (mock)",
@@ -190,6 +241,8 @@ export async function checkPincodeServiceability(
   const reversePickup =
     (postal.pickup ?? entry?.reverse_pickup) === "Y";
 
+  const est = calculateEstimatedDelivery(pin);
+
   return {
     pincode: pin,
     serviceable: prepaid || cod,
@@ -198,6 +251,8 @@ export async function checkPincodeServiceability(
     reversePickup,
     city: postal.city,
     state: postal.state_code,
+    estimatedDays: est.daysRange,
+    estimatedDeliveryDate: est.estimatedDateString,
     message: postal.remarks ?? entry?.remarks,
   };
 }

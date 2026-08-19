@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, MapPin, CheckCircle2, XCircle, Truck } from "lucide-react";
+import { Loader2, MapPin, CheckCircle2, XCircle, Truck, Clock } from "lucide-react";
 import type { PincodeServiceability } from "@/types/shipment";
 
 type PincodeCheckerProps = {
@@ -143,6 +143,14 @@ export function PincodeChecker({
                   {result.city}
                   {result.state ? `, ${result.state}` : ""}
                 </p>
+              )}
+              {result.serviceable && (result.estimatedDeliveryDate || result.estimatedDays) && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 pt-0.5">
+                  <Clock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                  <span>
+                    Estimated delivery: {result.estimatedDeliveryDate ? `${result.estimatedDeliveryDate} (${result.estimatedDays})` : result.estimatedDays}
+                  </span>
+                </div>
               )}
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                 <span>Prepaid: {result.prepaid ? "Yes" : "No"}</span>
